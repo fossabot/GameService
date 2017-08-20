@@ -29,16 +29,24 @@ impl BlackJackInstance {
         }
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self) -> Result<(), String> {
         let deck_len = self.deck.len();
+        if deck_len == 0 { // This shouldn't ever happen but saftey first
+            return Err("The deck is empty!".to_owned()); // Handle this to calculate win /lose
+        };
         let drawn_card = self.deck.remove(rand::thread_rng().gen_range(0, deck_len));
         self.hand.push(drawn_card);
+        Ok(())
     }
 
-    pub fn comp_draw(&mut self) {
+    pub fn comp_draw(&mut self) -> Result<(), String> {
         let deck_len = self.deck.len();
+        if deck_len == 0 { // This shouldn't ever happen but saftey first
+            return Err("The deck is empty!".to_owned()); // Handle this to calculate win /lose
+        }
         let drawn_card = self.deck.remove(rand::thread_rng().gen_range(0, deck_len));
         self.comp_hand.push(drawn_card);
+        Ok(())
     }
 
     /// Return the users current score
