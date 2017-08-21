@@ -6,13 +6,13 @@ use rand::Rng;
 #[derive(Hash, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct BlackJackInstance {
     hand: Vec<Card>,
-    bet: u64,
+    pub bet: u64,
     comp_hand: Vec<Card>,
-    user: u64, // User ID
+    pub user: u64, // User ID
     deck: Vec<Card>,
-    user_stay: bool,
-    comp_stay: bool,
-    complete: bool,
+    pub user_stay: bool,
+    pub comp_stay: bool,
+    pub complete: bool,
 }
 
 
@@ -35,6 +35,7 @@ impl BlackJackInstance {
     }
 
     pub fn draw(&mut self) -> Result<(), String> {
+        if self.user_stay {return Err("You already chose to stay!".to_string())}
         let deck_len = self.deck.len();
         if deck_len == 0 { // This shouldn't ever happen but saftey first
             return Err("The deck is empty!".to_owned()); // Handle this to calculate win /lose
@@ -115,6 +116,7 @@ impl BlackJackInstance {
     
     pub fn computer_play(&mut self) -> Result<(), String> {
         let game_status = self.game_status();
+        if self.comp_stay {return Ok(())};
         if game_status <=3 {return Err("The game is already over".to_owned())};
         let player_score = self.score();
         let comp_score = self.comp_score();
