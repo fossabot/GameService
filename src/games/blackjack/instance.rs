@@ -1,7 +1,9 @@
 extern crate rand;
+
 use games::blackjack::cards::{Card, create_deck};
 use rand::Rng;
-#[derive(Hash, Eq, PartialEq, Debug)]
+
+#[derive(Hash, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct BlackJackInstance {
     hand: Vec<Card>,
     bet: u64,
@@ -12,6 +14,7 @@ pub struct BlackJackInstance {
     comp_stay: bool,
     complete: bool,
 }
+
 
 
 #[allow(dead_code)]

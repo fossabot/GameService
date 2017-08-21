@@ -10,3 +10,8 @@ rocket_codegen = "0.3.2"
 serde = "1.0.11"
 serde_derive = "1.0.11"
 serde_json = "1.0.2"
+
+[dependencies.rocket_contrib]
+version = "0.3.2"
+default-features = false
+features = ["json"]
