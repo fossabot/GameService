@@ -19,7 +19,6 @@ pub struct BlackJackInstance {
 
 #[allow(dead_code)]
 impl BlackJackInstance {
-
     pub fn new(user: u64, bet: u64) -> Self {
         BlackJackInstance {
             user: user,
@@ -30,14 +29,16 @@ impl BlackJackInstance {
             comp_stay: false,
             user_stay: false,
             complete: false,
-
         }
     }
 
     pub fn draw(&mut self) -> Result<(), String> {
-        if self.user_stay {return Err("You already chose to stay!".to_string())}
+        if self.user_stay {
+            return Err("You already chose to stay!".to_string());
+        }
         let deck_len = self.deck.len();
-        if deck_len == 0 { // This shouldn't ever happen but saftey first
+        if deck_len == 0 {
+            // This shouldn't ever happen but saftey first
             return Err("The deck is empty!".to_owned()); // Handle this to calculate win /lose
         };
         let drawn_card = self.deck.remove(rand::thread_rng().gen_range(0, deck_len));
@@ -47,7 +48,8 @@ impl BlackJackInstance {
 
     pub fn comp_draw(&mut self) -> Result<(), String> {
         let deck_len = self.deck.len();
-        if deck_len == 0 { // This shouldn't ever happen but saftey first
+        if deck_len == 0 {
+            // This shouldn't ever happen but saftey first
             return Err("The deck is empty!".to_owned()); // Handle this to calculate win /lose
         }
         let drawn_card = self.deck.remove(rand::thread_rng().gen_range(0, deck_len));
@@ -57,7 +59,7 @@ impl BlackJackInstance {
 
     /// Return the users current score
     pub fn score(&self) -> u16 {
-        let mut aces = 0; 
+        let mut aces = 0;
         let mut score: u16 = 0;
         for card in &self.hand {
             if card.name == "ACE" {
@@ -66,14 +68,18 @@ impl BlackJackInstance {
             }
             score += card.value;
         }
-        if aces == 0 {return score}
+        if aces == 0 {
+            return score;
+        }
         for _ace in 1..aces {
-            if score > 10 {score+=1}
+            if score > 10 {
+                score += 1
+            }
         }
         score
     }
-    pub fn comp_score(&self) -> u16{
-        let mut aces = 0; 
+    pub fn comp_score(&self) -> u16 {
+        let mut aces = 0;
         let mut score: u16 = 0;
         for card in &self.comp_hand {
             if card.name == "ACE" {
@@ -82,9 +88,13 @@ impl BlackJackInstance {
             }
             score += card.value;
         }
-        if aces == 0 {return score}
+        if aces == 0 {
+            return score;
+        }
         for _ace in 1..aces {
-            if score > 10 {score+=1}
+            if score > 10 {
+                score += 1
+            }
         }
         score
     }
@@ -101,23 +111,35 @@ impl BlackJackInstance {
         // No more actions after 21
         if (player_score > 21) || (comp_score > 21) {
             self.complete = true;
-            if player_score == comp_score {return 3};
-            if player_score > comp_score {return 2};
-            return 1
+            if player_score == comp_score {
+                return 3;
+            };
+            if player_score > comp_score {
+                return 2;
+            };
+            return 1;
         };
         if self.comp_stay || self.user_stay {
-            if !self.complete {return 4}; // to early to call it
-            if player_score == comp_score {return 3};
+            if !self.complete {
+                return 4;
+            }; // to early to call it
+            if player_score == comp_score {
+                return 3;
+            };
         };
         return 5;
 
-        
+
     }
-    
+
     pub fn computer_play(&mut self) -> Result<(), String> {
         let game_status = self.game_status();
-        if self.comp_stay {return Ok(())};
-        if game_status <=3 {return Err("The game is already over".to_owned())};
+        if self.comp_stay {
+            return Ok(());
+        };
+        if game_status <= 3 {
+            return Err("The game is already over".to_owned());
+        };
         let player_score = self.score();
         let comp_score = self.comp_score();
         if comp_score == 21 {
@@ -130,12 +152,11 @@ impl BlackJackInstance {
             // 20% chance to press stay
         }
         if rand::thread_rng().gen_range(0, 100) >= 80 {
-                self.comp_stay = true;
-                return Ok(());
+            self.comp_stay = true;
+            return Ok(());
         };
 
         self.comp_draw()
 
     }
-
 }
