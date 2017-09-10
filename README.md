@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Mikibot/GameService.svg?branch=master)](https://travis-ci.org/Mikibot/GameService)
+
 ## Why?
 It would be beneficial to handle the games session progress with a micro-service, to offset some of the work that has to be done in the main session, this also allows miki being able to be restarted and the current progress of the game to not be lost (assuming the micro service was not stopped) this does add a bit of complexity, however it adds a bit of safety to add a micro-service and could allow more flexibility
 
