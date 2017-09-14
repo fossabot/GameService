@@ -1,6 +1,11 @@
 language: rust
 rust:
   - nightly
+services:
+  - postgresql
+
+before_script:
+  - psql -c 'create database GameServiceTest;' -U postgresql
 
 script:
   - cargo build --verbose

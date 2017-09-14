@@ -1,12 +1,14 @@
 use api::blackjack::Card;
+#[cfg(test)]
 use std::fmt;
+use rayon::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }
 
-#[allow(dead_code)]
+
 impl Hand {
     pub fn new() -> Self {
         Self { cards: Vec::with_capacity(5) }
@@ -17,7 +19,7 @@ impl Hand {
     }
 
     pub fn score(&self) -> u64 {
-        let mut ace_count = 08;
+        let mut ace_count = 0u8;
         let mut total = 0u64;
         for card in &self.cards {
             if card.name == "Ace" {
@@ -39,8 +41,18 @@ impl Hand {
         }
         total
     }
+    pub fn export(&self) -> (u64, Vec<String>) {
+        (
+            self.score(),
+            self.cards
+                .par_iter()
+                .map(|card| card.name.to_string())
+                .collect::<Vec<String>>(),
+        )
+    }
 }
 
+#[cfg(test)]
 impl fmt::Display for Hand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Score: {}", self.score())

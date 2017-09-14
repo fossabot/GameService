@@ -1,3 +1,3 @@
 pub mod blackjack;
-mod slot_machine;
 pub mod endpoints;
+pub mod slot_machine;
