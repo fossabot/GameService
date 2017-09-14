@@ -4,8 +4,9 @@ rust:
 services:
   - postgresql
 
-before_script:
-  - psql -c 'create database GameServiceTest;' -U postgres
+before_install:
+  - psql -c 'DROP DATABASE IF EXISTS GameServiceTest;' -U postgres
+  - psql -c 'CREATE DATABASE GameServiceTest;' -U postgres
 
 script:
   - cargo build --verbose
