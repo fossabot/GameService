@@ -150,7 +150,6 @@ impl BlackJack {
         if !self.player_stay_status {
             self.player_stay_status = true;
             self.dealer_play().unwrap();
-            println!("Inside the stay!")
         }
     }
     fn dealer_hit(&mut self) -> Result<(), &'static str> {
@@ -200,11 +199,9 @@ impl BlackJack {
     }
     // Computes dealer play
     pub fn dealer_play(&mut self) -> Result<(), &'static str> {
-        println!("Inside the play!");
         if !self.player_stay_status {
             return Err("Player is not done yet");
         }
-        println!("Dodging if's like nero.");
         while self.status() == GameState::InProgress && self.dealer.score() < self.player.score() {
             self.dealer_hit()?; // No errors should happen here
         }

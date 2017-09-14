@@ -63,9 +63,5 @@ pub fn establish_connection_pool() -> ConnectionPool {
 }
 
 pub fn create_rocket() -> rocket::Rocket {
-    if env::var("IS_HEROKU").is_ok() {
-        let port = env::var("PORT").unwrap();
-        env::set_var("ROCKET_PORT", port);
-    }
     api::endpoints::router(rocket::ignite().manage(establish_connection_pool()))
 }
