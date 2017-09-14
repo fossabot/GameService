@@ -40,12 +40,16 @@ mod test;
 
 pub fn establish_connection_pool() -> ConnectionPool {
     dotenv().ok();
+
     #[cfg(not(any(test, bench)))]
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     #[cfg(any(test, bench))]
     let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = r2d2::Pool::new(r2d2::Config::default(), manager).expect("Failed to create pool");
+    let pool = r2d2::Pool::new(match env::var("MAX_POOL") {
+        Ok(size) => r2d2::Config::builder().pool_size(size.parse::<u32>().unwrap()).build(),
+        Err(_) => r2d2::Config::builder().pool_size(10).build()
+    }, manager).expect("Failed to create pool");
     diesel::migrations::run_pending_migrations(&*(pool.clone().get().unwrap())).ok(); // Run migrations
     #[cfg(any(test, bench))]
     {
@@ -59,5 +63,9 @@ pub fn establish_connection_pool() -> ConnectionPool {
 }
 
 pub fn create_rocket() -> rocket::Rocket {
+    if env::var("IS_HEROKU").is_ok() {
+        let port = env::var("PORT").unwrap();
+        env::set_var("ROCKET_PORT", port);
+    }
     api::endpoints::router(rocket::ignite().manage(establish_connection_pool()))
 }
