@@ -29,7 +29,7 @@ impl Hand {
             }
         }
         if ace_count >= 1 {
-            if total < 10 {
+            if total <= 10 {
                 total += 11
             } else {
                 total += 1

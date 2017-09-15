@@ -1,4 +1,5 @@
 use api::blackjack::Card;
+#[cfg(not(any(test, bench)))]
 use rand::{thread_rng, Rng};
 use std::fmt;
 use rayon::prelude::*;
@@ -10,6 +11,7 @@ pub struct Deck {
 
 
 impl Deck {
+    #[allow(unused_mut)]
     pub fn new() -> Self {
         let mut cards: Vec<Card> = vec![
             Card {
@@ -224,7 +226,7 @@ impl Deck {
                 value: 10,
             },
         ];
-        thread_rng().shuffle(&mut cards);
+        #[cfg(not(test))] thread_rng().shuffle(&mut cards);
         Self { cards: cards }
     }
 

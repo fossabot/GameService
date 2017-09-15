@@ -1,6 +1,7 @@
 #![recursion_limit = "128"]
-#![feature(plugin, custom_derive)]
+#![feature(plugin, custom_derive, test)]
 #![plugin(rocket_codegen)]
+
 
 #[macro_use]
 extern crate serde_json;
