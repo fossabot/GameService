@@ -7,9 +7,7 @@ services:
 before_install:
   - psql -c 'DROP DATABASE IF EXISTS GameServiceTest;' -U postgres
   - psql -c 'CREATE DATABASE GameServiceTest;' -U postgres
-  - psql -c 'DROP TABLE IF EXISTS __diesel_schema_migrations;' -U postgres
-  - cargo install diesel_cli --no-default-features --features "postgres"
-  - diesel migration run
+  - psql -c 'DROP TABLE IF EXISTS __diesel_schema_migrations;' -U postgres GameServiceTest
 
 script:
   - cargo build --verbose
