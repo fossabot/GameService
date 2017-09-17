@@ -11,5 +11,7 @@ before_install:
   - psql -c 'DROP TABLE IF EXISTS __diesel_schema_migrations;' -U postgres
 
 script:
+  - cargo install diesel_cli --no-default-features --features "postgres"
+  - diesel migration run --database-url $TEST_DATABASE_URL
   - cargo build --verbose
   - cargo test --lib --verbose
