@@ -22,7 +22,6 @@ fn create_client(use_db: bool) -> Client {
     if !use_db {
         Client::new(router(rocket::ignite())).unwrap()
     } else {
-
         Client::new(router(
             rocket::ignite().manage(establish_connection_pool().clone()),
         )).unwrap()
@@ -41,7 +40,6 @@ fn test_blackjack_routes() {
             resp.status
                 .expect("/blackjack/: Session count returned an error")
                 .active_sessions,
-
             0
         );
     }
@@ -50,9 +48,8 @@ fn test_blackjack_routes() {
         let mut resp = client.post("/blackjack/0/0").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
-        let resp = resp.status.expect(
-            "An Error has occurred on session creation",
-        );
+        let resp = resp.status
+            .expect("An Error has occurred on session creation");
         assert_eq!(resp.dealer_hand.len(), 1);
         assert!(resp.game_state.is_none());
         let mut resp = client.get("/blackjack/0/info").dispatch();

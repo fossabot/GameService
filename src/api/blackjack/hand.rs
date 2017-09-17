@@ -1,7 +1,6 @@
 use api::blackjack::Card;
 #[cfg(test)]
 use std::fmt;
-use rayon::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Hand {
@@ -11,7 +10,9 @@ pub struct Hand {
 
 impl Hand {
     pub fn new() -> Self {
-        Self { cards: Vec::with_capacity(5) }
+        Self {
+            cards: Vec::with_capacity(5),
+        }
     }
 
     pub fn add_card(&mut self, card: Card) {
@@ -25,7 +26,7 @@ impl Hand {
             if card.name == "Ace" {
                 ace_count += 1
             } else {
-                total += card.value as u64;
+                total += u64::from(card.value);
             }
         }
         if ace_count >= 1 {
@@ -45,7 +46,7 @@ impl Hand {
         (
             self.score(),
             self.cards
-                .par_iter()
+                .iter()
                 .map(|card| card.name.to_string())
                 .collect::<Vec<String>>(),
         )

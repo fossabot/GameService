@@ -1,14 +1,16 @@
 language: rust
 rust:
   - nightly
+cache: cargo
 services:
   - postgresql
 
 before_install:
   - psql -c 'DROP DATABASE IF EXISTS GameServiceTest;' -U postgres
   - psql -c 'CREATE DATABASE GameServiceTest;' -U postgres
-  - psql -c 'DROP TABLE IF EXISTS __diesel_schema_migrations;' -U postgres GameServiceTest
+  - psql -c 'DROP TABLE IF EXISTS __diesel_schema_migrations;' -U postgres
 
 script:
+  - cargo update
   - cargo build --verbose
   - cargo test --verbose

@@ -1,7 +1,6 @@
 use ConnectionPool;
-use api::blackjack::{Deck, Hand, Session, Card};
+use api::blackjack::{Card, Deck, Hand, Session};
 
-use rayon::prelude::*;
 use diesel::prelude::*;
 use diesel;
 
@@ -101,13 +100,14 @@ impl BlackJack {
         }
         let player_bet = session.bet.unwrap();
 
+
         Ok(Self {
             // TODO: Exceptions are not acceptable in production, handle them
             player: Hand {
                 cards: session
                     .player_hand
                     .iter()
-                    .map(|card| Card::new(&card).expect("Session is corrupt"))
+                    .map(|card| Card::new(card).unwrap_or_default())
                     .collect(),
             },
             player_id: session.id as u64,
@@ -115,14 +115,14 @@ impl BlackJack {
                 cards: session
                     .dealer_hand
                     .iter()
-                    .map(|card| Card::new(&card).expect("Session is corrupt"))
+                    .map(|card| Card::new(card).unwrap_or_default())
                     .collect(),
             },
             deck: Deck {
                 cards: session
                     .deck
-                    .par_iter()
-                    .map(|card| Card::new(&card).expect("Session is corrupt"))
+                    .iter()
+                    .map(|card| Card::new(card).unwrap_or_default())
                     .collect(),
             },
             bet: player_bet as u64,
@@ -134,14 +134,12 @@ impl BlackJack {
     }
     pub fn player_hit(&mut self) -> Result<(), &'static str> {
         match self.status() {
-            GameState::InProgress => {
-                if !self.player_stay_status {
-                    self.first_turn = false;
-                    Ok(self.player.add_card(self.deck.draw()))
-                } else {
-                    Err("You already pressed stay")
-                }
-            }
+            GameState::InProgress => if !self.player_stay_status {
+                self.first_turn = false;
+                Ok(self.player.add_card(self.deck.draw()))
+            } else {
+                Err("You already pressed stay")
+            },
             GameState::PlayerLost => Err("You already lost"),
             GameState::PlayerWon => Err("You already won"),
         }
@@ -154,13 +152,11 @@ impl BlackJack {
     }
     fn dealer_hit(&mut self) -> Result<(), &'static str> {
         match self.status() {
-            GameState::InProgress => {
-                if !self.dealer_stay_status {
-                    Ok(self.dealer.add_card(self.deck.draw()))
-                } else {
-                    Err("The Dealer already pressed stay")
-                }
-            }
+            GameState::InProgress => if !self.dealer_stay_status {
+                Ok(self.dealer.add_card(self.deck.draw()))
+            } else {
+                Err("The Dealer already pressed stay")
+            },
             GameState::PlayerWon => Err("The dealer already lost"),
             GameState::PlayerLost => Err("The dealer already won"),
         }
@@ -184,7 +180,7 @@ impl BlackJack {
         if self.dealer.cards.len() == 5 {
             return GameState::PlayerWon;
         };
-        if self.player_stay_status == false || self.dealer_stay_status == false {
+        if !(self.player_stay_status || self.dealer_stay_status) {
             return GameState::InProgress;
         };
         if player_score == dealer_score {
@@ -235,6 +231,6 @@ impl BlackJack {
 impl Drop for BlackJack {
     fn drop(&mut self) {
         self.save(); // Save before vanishing
-        // Consider having user locks and unlocking here
+                     // Consider having user locks and unlocking here
     }
 }

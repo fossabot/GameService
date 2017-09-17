@@ -2,7 +2,6 @@ use api::blackjack::Card;
 #[cfg(not(any(test, bench)))]
 use rand::{thread_rng, Rng};
 use std::fmt;
-use rayon::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Deck {
@@ -66,7 +65,6 @@ impl Deck {
                 name: "QUEENS".to_string(),
                 value: 10,
             },
-
             Card {
                 name: "ACE".to_string(),
                 value: 11,
@@ -119,7 +117,6 @@ impl Deck {
                 name: "QUEENS".to_string(),
                 value: 10,
             },
-
             Card {
                 name: "ACE".to_string(),
                 value: 11,
@@ -172,7 +169,6 @@ impl Deck {
                 name: "QUEENS".to_string(),
                 value: 10,
             },
-
             Card {
                 name: "ACE".to_string(),
                 value: 11,
@@ -226,7 +222,8 @@ impl Deck {
                 value: 10,
             },
         ];
-        #[cfg(not(test))] thread_rng().shuffle(&mut cards);
+        #[cfg(not(test))]
+        thread_rng().shuffle(&mut cards);
         Self { cards: cards }
     }
 
@@ -236,7 +233,7 @@ impl Deck {
     }
     pub fn export(&self) -> Vec<String> {
         self.cards
-            .par_iter()
+            .iter()
             .map(|card| card.name.to_string())
             .collect()
     }

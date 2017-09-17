@@ -26,7 +26,10 @@ impl Response {
         let (player_score, player_hand) = bj.player.export();
         let (dealer_score, dealer_hand) = if bj.first_turn {
             let first_card = &bj.dealer.cards[0];
-            (first_card.value as u64, vec![first_card.name.to_string()])
+            (
+                u64::from(first_card.value),
+                vec![first_card.name.to_string()],
+            )
         } else {
             bj.dealer.export()
         };
@@ -35,7 +38,7 @@ impl Response {
             GameState::PlayerWon => Some(true),
             GameState::PlayerLost => Some(false),
         };
-        return Response {
+        Response {
             status_code: 200,
             status: Ok(Success {
                 player_id: player_id,
@@ -48,7 +51,7 @@ impl Response {
                 player_can_hit: !bj.player_stay_status,
                 dealer_can_hit: !bj.dealer_stay_status,
             }),
-        };
+        }
     }
     pub fn error(error_code: u16, error_message: &str) -> Self {
         Self {

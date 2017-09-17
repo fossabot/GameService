@@ -7,12 +7,12 @@ pub fn router(rocket: Rocket) -> Rocket {
         .mount(
             "/blackjack",
             routes![
-            blackjack_route::active_sessions,
-            blackjack_route::user_info,
-            blackjack_route::create_user,
-            blackjack_route::player_hit,
-            blackjack_route::player_stay,
-        ],
+                blackjack_route::active_sessions,
+                blackjack_route::user_info,
+                blackjack_route::create_user,
+                blackjack_route::player_hit,
+                blackjack_route::player_stay,
+            ],
         )
         .mount("/slot_machine", routes![slot_machine::slots])
 }
