@@ -61,9 +61,9 @@ pub fn establish_connection_pool() -> ConnectionPool {
     {
         use schema::blackjack::dsl::*;
         let conn = pool.clone().get().unwrap();
-        let _num = diesel::delete(blackjack.filter(id.is_not_null()))
-            .execute(&*conn)
-            .expect("Error deleting Previous BlackJack Test data");
+        match diesel::delete(blackjack.filter(id.is_not_null())).execute(&*conn) {
+            _ => (),
+        };
     }
     pool
 }
