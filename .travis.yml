@@ -11,6 +11,5 @@ before_install:
   - psql -c 'DROP TABLE IF EXISTS __diesel_schema_migrations;' -U postgres
 
 script:
-  - cargo update
   - cargo build --verbose
-  - cargo test --verbose
+  - cargo test --lib --verbose
