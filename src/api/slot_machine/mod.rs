@@ -8,14 +8,8 @@ pub fn slot_machine() -> (f64, Vec<String>) {
     choices.push(row[rng.gen_range(0, row.len())].to_owned());
     choices.push(row[rng.gen_range(0, row.len())].to_owned());
     let picks = choices.clone();
-    choices = choices
-        .iter()
-        .fold(vec![], |mut data, entry| if data.contains(entry) {
-            data
-        } else {
-            data.push(entry.to_owned());
-            data
-        });
+    choices.sort();
+    choices.dedup();
     let mult: f64 = match choices.len() {
         3 => 0f64,
         2 => 1.5,
