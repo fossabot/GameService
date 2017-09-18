@@ -1,4 +1,4 @@
-#![allow(needless_pass_by_value)]
+    #![allow(needless_pass_by_value)]
 use ConnectionPool;
 
 
@@ -32,7 +32,7 @@ fn active_sessions(db_pool: State<ConnectionPool>) -> RouteResponseJson {
     }
 }
 
-#[get("/<user>/info")]
+#[get("/<user>")]
 fn user_info(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
     match BlackJack::restore(db_pool.clone(), user) {
         Ok(bj) => Json(to_json_value(BlackJackResponse::success(&bj)).unwrap()),

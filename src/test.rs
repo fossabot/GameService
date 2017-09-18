@@ -52,7 +52,7 @@ fn test_blackjack_routes() {
             .expect("An Error has occurred on session creation");
         assert_eq!(resp.dealer_hand.len(), 1);
         assert!(resp.game_state.is_none());
-        let mut resp = client.get("/blackjack/0/info").dispatch();
+        let mut resp = client.get("/blackjack/0").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         assert!(

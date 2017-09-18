@@ -198,6 +198,7 @@ impl BlackJack {
         if !self.player_stay_status {
             return Err("Player is not done yet");
         }
+        self.first_turn = false;
         while self.status() == GameState::InProgress && self.dealer.score() < self.player.score() {
             self.dealer_hit()?; // No errors should happen here
         }
