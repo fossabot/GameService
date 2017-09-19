@@ -24,3 +24,7 @@ And configure [rocket](https://rocket.rs/guide/configuration/)
 	- `POST: /<uid>/claim` - Returns the amount bet + reward, either 0 or 2x the `bet`
 - `/slot_machine`
 	- `GET: /<bet>` - returns the bet mutiplied by 0/1.5/2
+
+#### Sample Responses:
+- [BlackJack](API/BlackJack.md)
+- [SlotMachine](API/SlotMachine.md)
