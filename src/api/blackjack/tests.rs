@@ -14,6 +14,6 @@ fn bench_mark(b: &mut Bencher) {
             bj.player_hit().unwrap();
             bj.player_stay();
         }
-        BlackJack::restore(pool.clone(), uid).unwrap();
+        BlackJack::restore(pool.clone(), uid).unwrap().claim().ok();
     })
 }

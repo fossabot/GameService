@@ -21,6 +21,7 @@ pub struct BlackJack {
     pub player_stay_status: bool,
     pub dealer_stay_status: bool,
     db_pool: ConnectionPool,
+    claimed: bool,
 }
 
 impl BlackJack {
@@ -31,7 +32,6 @@ impl BlackJack {
         let conn = db_pool.clone().get().unwrap();
         let num: i64 = blackjack
             .filter(id.eq(player_id as i64))
-            .filter(status.is_null())
             .count()
             .get_result(&*conn)
             // TODO: Make this safer
@@ -79,6 +79,7 @@ impl BlackJack {
             player_stay_status: false,
             dealer_stay_status: false,
             db_pool: db_pool.clone(),
+            claimed: false,
         })
     }
     pub fn restore(db_pool: ConnectionPool, player: u64) -> Result<Self, ()> {
@@ -130,6 +131,7 @@ impl BlackJack {
             dealer_stay_status: session.dealer_stay,
             first_turn: session.first_turn,
             db_pool: db_pool.clone(),
+            claimed: false,
         })
     }
     pub fn player_hit(&mut self) -> Result<(), &'static str> {
@@ -226,12 +228,39 @@ impl BlackJack {
         // TODO: make this safe
         let _: Session = sess.save_changes(&*conn).unwrap();
     }
+
+    fn db_remove(&self) {
+        use schema::blackjack::dsl::*;
+        let conn = self.db_pool.clone().get().unwrap();
+        let _num = diesel::delete(blackjack.filter(id.eq(self.player_id as i64)))
+            .execute(&*conn)
+            .expect("Error deleting Previous BlackJack Test data");
+    }
+
+    // Consumes session and returns bet
+    pub fn claim(mut self) -> Result<u64, Self> {
+        // Bet
+        match self.status() {
+            GameState::InProgress => Err(self),
+            GameState::PlayerWon => {
+                self.claimed = true;
+                Ok(self.bet * 2)
+            }
+            GameState::PlayerLost => {
+                self.claimed = true;
+                Ok(0)
+            }
+        }
+    }
 }
 
 
 impl Drop for BlackJack {
     fn drop(&mut self) {
-        self.save(); // Save before vanishing
-                     // Consider having user locks and unlocking here
+        if !self.claimed {
+            self.save(); // Save before vanishing
+        } else {
+            self.db_remove();
+        }
     }
 }

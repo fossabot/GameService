@@ -18,6 +18,12 @@ pub struct ActiveSessions {
     pub status: Result<ActiveSessionsCount, String>,
 }
 
+#[derive(Deserialize)]
+pub struct Claim {
+    pub status_code: u16,
+    pub status: Result<u64, String>,
+}
+
 fn create_client(use_db: bool) -> Client {
     if !use_db {
         Client::new(router(rocket::ignite())).unwrap()
@@ -45,7 +51,7 @@ fn test_blackjack_routes() {
     }
     // Test Creation and info route
     {
-        let mut resp = client.post("/blackjack/0/0").dispatch();
+        let mut resp = client.post("/blackjack/0/1").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         let resp = resp.status
@@ -64,7 +70,7 @@ fn test_blackjack_routes() {
     }
     // Test Creation route fails
     {
-        let mut resp = client.post("/blackjack/0/0").dispatch();
+        let mut resp = client.post("/blackjack/0/1").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 501);
     }
@@ -96,9 +102,26 @@ fn test_blackjack_routes() {
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 501);
     }
+    // Test claim route works
+    {
+        let mut resp = client.get("/blackjack/0").dispatch();
+        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        assert_eq!(resp.status_code, 200);
+        let status = resp.status.unwrap();
+        let mut expected_bet = 0;
+        if status.game_state.unwrap() {
+            expected_bet = 2;
+        }
+        let mut resp = client.post("/blackjack/0/claim").dispatch();
+        let resp: Claim = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let status_code: u16 = resp.status_code as u16;
+        let returned_bet: u64 = resp.status.unwrap();
+        assert_eq!(status_code, 200);
+        assert_eq!(returned_bet, expected_bet);
+    }
     // Make sure new route works Now
     {
-        let mut resp = client.post("/blackjack/0/0").dispatch();
+        let mut resp = client.post("/blackjack/0/1").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
     }

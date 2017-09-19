@@ -1,4 +1,4 @@
-    #![allow(needless_pass_by_value)]
+#![allow(needless_pass_by_value)]
 use ConnectionPool;
 
 
@@ -23,9 +23,9 @@ fn active_sessions(db_pool: State<ConnectionPool>) -> RouteResponseJson {
     {
         Ok(session_count) => Json(json!({"status_code": 200,
             "status": {
-            "Ok": {
-            "active_sessions": session_count}}
-        })),
+                "Ok": {
+                    "active_sessions": session_count}}
+                })),
         Err(_) => Json(
             json!({"status_code": 500, "status":{"Err": "Failed to get active sessions"}}),
         ),
@@ -49,7 +49,7 @@ fn create_user(db_pool: State<ConnectionPool>, user: u64, bet: u64) -> RouteResp
         None => Json(
             to_json_value(BlackJackResponse::error(
                 501,
-                "Failed to create user, user already exists.",
+                "Failed to create, bet must be claimed before recreating a session.",
             )).unwrap(),
         ),
     }
@@ -75,6 +75,20 @@ fn player_stay(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
             bj.player_stay();
             Json(to_json_value(BlackJackResponse::success(&bj)).unwrap())
         }
+        Err(_) => Json(
+            to_json_value(BlackJackResponse::error(501, "User does not exist")).unwrap(),
+        ),
+    }
+}
+#[post("/<user>/claim", rank = 2)]
+fn claim(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
+    match BlackJack::restore(db_pool.clone(), user) {
+        Ok(bj) => match bj.claim() {
+            Ok(amount) => Json(json!({"status_code": 200, "status": {"Ok": amount}})),
+            Err(_) => Json(
+                to_json_value(BlackJackResponse::error(501, "Game is not over yet")).unwrap(),
+            ),
+        },
         Err(_) => Json(
             to_json_value(BlackJackResponse::error(501, "User does not exist")).unwrap(),
         ),
