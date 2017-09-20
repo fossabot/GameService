@@ -1,3 +1,4 @@
 pub mod blackjack;
 pub mod endpoints;
 pub mod slot_machine;
+pub mod coin_toss;

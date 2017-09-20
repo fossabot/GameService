@@ -1,7 +1,7 @@
 [package]
 authors = ["Fuzen-py <fuzen@protonmail.com>"]
 name = "games-microservice"
-version = "0.3.0"
+version = "0.3.3"
 
 [dependencies]
 dotenv = "0.10.1"
