@@ -55,7 +55,7 @@ fn create_user(db_pool: State<ConnectionPool>, user: u64, bet: u64) -> RouteResp
     }
 }
 
-#[post("/<user>/hit", rank = 2)]
+#[post("/<user>/hit")]
 fn player_hit(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
     match BlackJack::restore(db_pool.clone(), user) {
         Ok(mut bj) => match bj.player_hit() {
@@ -68,7 +68,7 @@ fn player_hit(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
     }
 }
 
-#[post("/<user>/stay", rank = 2)]
+#[post("/<user>/stay")]
 fn player_stay(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
     match BlackJack::restore(db_pool.clone(), user) {
         Ok(mut bj) => {
@@ -80,7 +80,7 @@ fn player_stay(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
         }
     }
 }
-#[post("/<user>/claim", rank = 2)]
+#[post("/<user>/claim")]
 fn claim(db_pool: State<ConnectionPool>, user: u64) -> RouteResponseJson {
     match BlackJack::restore(db_pool.clone(), user) {
         Ok(bj) => match bj.claim() {
