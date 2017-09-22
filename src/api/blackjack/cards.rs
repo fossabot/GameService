@@ -1,52 +1,49 @@
 #[cfg(test)]
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone)]
 pub struct Card {
-    pub name: String,
+    pub name: &'static str,
     pub value: u8,
 }
+
+const NON_ROYALTY_CARDS: [&'static str; 10] = [
+    "ACE",
+    "TWOS",
+    "THREES",
+    "FOURS",
+    "FIVES",
+    "SIXES",
+    "SEVENS",
+    "EIGHTS",
+    "NINES",
+    "TENS",
+];
+
+const ROYALTY_CARDS: [&'static str; 3] = ["JACKS", "KINGS", "QUEENS"];
 
 impl Card {
     // Used to restore from DB
     pub fn new(card_name: &str) -> Result<Self, ()> {
-        let pos = vec![
-            "ACE",
-            "TWOS",
-            "THREES",
-            "FOURS",
-            "FIVES",
-            "SIXES",
-            "SEVENS",
-            "EIGHTS",
-            "NINES",
-            "TENS",
-        ].iter()
-            .position(|&r| r == card_name);
-        match pos {
+        match NON_ROYALTY_CARDS.iter().position(|&r| r == card_name) {
             Some(position) => Ok(Card {
-                name: card_name.to_string(),
+                name: NON_ROYALTY_CARDS[position],
                 value: position as u8 + 1u8,
             }),
-            None => if vec!["JACKS", "KINGS", "QUEENS"]
-                .iter()
-                .any(|&r| r == card_name)
-            {
-                Ok(Card {
-                    name: card_name.to_string(),
+            None => match ROYALTY_CARDS.iter().position(|&r| r == card_name) {
+                Some(position) => Ok(Card {
+                    name: ROYALTY_CARDS[position],
                     value: 10u8,
-                })
-            } else {
-                Err(())
+                }),
+                None => Err(()),
             },
         }
     }
 }
-
 impl Default for Card {
     fn default() -> Self {
         Self {
-            name: "ERR".to_owned(),
+            name: "ERR",
             value: 0,
         }
     }

@@ -2,7 +2,7 @@ use api::blackjack::Card;
 #[cfg(test)]
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }

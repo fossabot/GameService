@@ -1,3 +1,4 @@
+extern crate test;
 use super::serde_json;
 
 use rocket;
@@ -6,6 +7,7 @@ use api::blackjack::BlackJackResponse;
 use api::endpoints::router;
 
 use establish_connection_pool;
+use self::test::Bencher;
 
 #[derive(Deserialize)]
 pub struct ActiveSessionsCount {
@@ -33,7 +35,6 @@ fn create_client(use_db: bool) -> Client {
         )).unwrap()
     }
 }
-
 #[test]
 fn test_blackjack_routes() {
     let client = create_client(true);
@@ -51,7 +52,7 @@ fn test_blackjack_routes() {
     }
     // Test Creation and info route
     {
-        let mut resp = client.post("/blackjack/0/1").dispatch();
+        let mut resp = client.post("/blackjack/0/create/1").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         let resp = resp.status
@@ -70,7 +71,7 @@ fn test_blackjack_routes() {
     }
     // Test Creation route fails
     {
-        let mut resp = client.post("/blackjack/0/1").dispatch();
+        let mut resp = client.post("/blackjack/0/create/1").dispatch();
         let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 501);
     }
@@ -119,20 +120,33 @@ fn test_blackjack_routes() {
         assert_eq!(status_code, 200);
         assert_eq!(returned_bet, expected_bet);
     }
-    // Make sure new route works Now
-    {
-        let mut resp = client.post("/blackjack/0/1").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
-        assert_eq!(resp.status_code, 200);
-    }
 }
 
-#[test]
-fn test_slot_route() {
+#[bench]
+fn bench_blackjack(b: &mut Bencher) {
+    let client = create_client(true);
+    b.iter(|| {
+        client.post("/blackjack/16/create/1").dispatch();
+        client.post("/blackjack/16/stay").dispatch();
+        client.post("/blackjack/16/claim").dispatch();
+    })
+}
+
+#[bench]
+fn test_slot_route(b: &mut Bencher) {
     let client = create_client(false);
-    let mut resp = client.get("/slot_machine/23").dispatch();
-    let resp: serde_json::Value = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
-    let ret: &f64 = &resp["return"].as_f64().unwrap();
-    println!("{}", ret);
-    assert!(vec![0f64, 34f64, 46f64].iter().any(|i| i == ret))
+    b.iter(|| {
+        let mut resp = client.get("/slot_machine/23").dispatch();
+        let resp: serde_json::Value = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let ret: &f64 = &resp["return"].as_f64().unwrap();
+        if !vec![0f64, 34f64, 46f64].iter().any(|i| i == ret) {
+            panic!("SLOTS DID BAD MATH");
+        }
+    })
+}
+
+#[bench]
+fn bench_coin_toss_route(b: &mut Bencher) {
+    let client = create_client(false);
+    b.iter(|| client.get("/coin_toss/h/100").dispatch())
 }

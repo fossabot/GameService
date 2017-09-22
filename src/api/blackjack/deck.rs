@@ -1,9 +1,9 @@
 use api::blackjack::Card;
+use api::blackjack::DECK_OF_CARDS;
 #[cfg(not(any(test, bench)))]
 use rand::{thread_rng, Rng};
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Deck {
     pub cards: Vec<Card>,
 }
@@ -12,224 +12,25 @@ pub struct Deck {
 impl Deck {
     #[allow(unused_mut)]
     pub fn new() -> Self {
-        let mut cards: Vec<Card> = vec![
-            Card {
-                name: "ACE".to_string(),
-                value: 11,
-            },
-            Card {
-                name: "TWOS".to_string(),
-                value: 2,
-            },
-            Card {
-                name: "THREES".to_string(),
-                value: 3,
-            },
-            Card {
-                name: "FOURS".to_string(),
-                value: 4,
-            },
-            Card {
-                name: "FIVES".to_string(),
-                value: 5,
-            },
-            Card {
-                name: "SIXES".to_string(),
-                value: 6,
-            },
-            Card {
-                name: "SEVENS".to_string(),
-                value: 7,
-            },
-            Card {
-                name: "EIGHTS".to_string(),
-                value: 8,
-            },
-            Card {
-                name: "NINES".to_string(),
-                value: 9,
-            },
-            Card {
-                name: "TENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "JACKS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "KINGS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "QUEENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "ACE".to_string(),
-                value: 11,
-            },
-            Card {
-                name: "TWOS".to_string(),
-                value: 2,
-            },
-            Card {
-                name: "THREES".to_string(),
-                value: 3,
-            },
-            Card {
-                name: "FOURS".to_string(),
-                value: 4,
-            },
-            Card {
-                name: "FIVES".to_string(),
-                value: 5,
-            },
-            Card {
-                name: "SIXES".to_string(),
-                value: 6,
-            },
-            Card {
-                name: "SEVENS".to_string(),
-                value: 7,
-            },
-            Card {
-                name: "EIGHTS".to_string(),
-                value: 8,
-            },
-            Card {
-                name: "NINES".to_string(),
-                value: 9,
-            },
-            Card {
-                name: "TENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "JACKS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "KINGS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "QUEENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "ACE".to_string(),
-                value: 11,
-            },
-            Card {
-                name: "TWOS".to_string(),
-                value: 2,
-            },
-            Card {
-                name: "THREES".to_string(),
-                value: 3,
-            },
-            Card {
-                name: "FOURS".to_string(),
-                value: 4,
-            },
-            Card {
-                name: "FIVES".to_string(),
-                value: 5,
-            },
-            Card {
-                name: "SIXES".to_string(),
-                value: 6,
-            },
-            Card {
-                name: "SEVENS".to_string(),
-                value: 7,
-            },
-            Card {
-                name: "EIGHTS".to_string(),
-                value: 8,
-            },
-            Card {
-                name: "NINES".to_string(),
-                value: 9,
-            },
-            Card {
-                name: "TENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "JACKS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "KINGS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "QUEENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "ACE".to_string(),
-                value: 11,
-            },
-            Card {
-                name: "TWOS".to_string(),
-                value: 2,
-            },
-            Card {
-                name: "THREES".to_string(),
-                value: 3,
-            },
-            Card {
-                name: "FOURS".to_string(),
-                value: 4,
-            },
-            Card {
-                name: "FIVES".to_string(),
-                value: 5,
-            },
-            Card {
-                name: "SIXES".to_string(),
-                value: 6,
-            },
-            Card {
-                name: "SEVENS".to_string(),
-                value: 7,
-            },
-            Card {
-                name: "EIGHTS".to_string(),
-                value: 8,
-            },
-            Card {
-                name: "NINES".to_string(),
-                value: 9,
-            },
-            Card {
-                name: "TENS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "JACKS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "KINGS".to_string(),
-                value: 10,
-            },
-            Card {
-                name: "QUEENS".to_string(),
-                value: 10,
-            },
-        ];
+        let mut cards = DECK_OF_CARDS.clone();
         #[cfg(not(test))]
         thread_rng().shuffle(&mut cards);
-        Self { cards: cards }
+        Self {
+            cards: cards.to_vec(),
+        }
     }
 
     pub fn draw(&mut self) -> Card {
         // Game should never get to the point where the deck is empty
-        self.cards.pop().unwrap()
+        #[cfg(not(test))]
+        {
+            let i = thread_rng().gen_range(0, self.cards.len());
+            self.cards.remove(i)
+        }
+        #[cfg(test)]
+        {
+            self.cards.pop().unwrap()
+        }
     }
     pub fn export(&self) -> Vec<String> {
         self.cards

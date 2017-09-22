@@ -182,6 +182,12 @@ impl BlackJack {
         if self.dealer.cards.len() == 5 {
             return GameState::PlayerWon;
         };
+        if player_score == 21 {
+            return GameState::PlayerWon;
+        };
+        if dealer_score == 21 {
+            return GameState::PlayerLost;
+        }
         if !(self.player_stay_status || self.dealer_stay_status) {
             return GameState::InProgress;
         };
