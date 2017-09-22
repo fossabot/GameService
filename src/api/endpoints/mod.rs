@@ -17,5 +17,5 @@ pub fn router(rocket: Rocket) -> Rocket {
             ],
         )
         .mount("/slot_machine", routes![slot_machine::slots])
-        .mount("/coin_toss", routes![coin_toss::coin_flip])
+        .mount("/coin_toss", routes![coin_toss::coin_toss])
 }

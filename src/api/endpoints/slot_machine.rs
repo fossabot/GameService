@@ -7,7 +7,5 @@ type RouteResponseJson = JsonResp<JsonValue>;
 #[get("/<bet>")]
 fn slots(bet: u64) -> RouteResponseJson {
     let (mult, picks) = slot_machine();
-    Json(
-        json!({"picks": picks, "return": (bet as f64 * mult).floor()}),
-    )
+    Json(json!({"picks": picks, "return": (bet as f64 * mult).floor()}))
 }

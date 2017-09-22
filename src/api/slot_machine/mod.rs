@@ -1,12 +1,13 @@
 use rand::{thread_rng, Rng};
 // Returns multiplier
-pub fn slot_machine() -> (f64, Vec<String>) {
-    let row: Vec<&'static str> = vec!["🍒", "🍊", "🍓", "🍍", "🍇", "🍉", "⭐"];
-    let mut choices: Vec<String> = Vec::with_capacity(3);
+const ROW: [&'static str; 7] = ["🍒", "🍊", "🍓", "🍍", "🍇", "🍉", "⭐"];
+pub fn slot_machine() -> (f64, Vec<&'static str>) {
+    let mut choices: Vec<&'static str> = Vec::with_capacity(3);
     let mut rng = thread_rng();
-    choices.push(row[rng.gen_range(0, row.len())].to_owned());
-    choices.push(row[rng.gen_range(0, row.len())].to_owned());
-    choices.push(row[rng.gen_range(0, row.len())].to_owned());
+    let row_len = ROW.len();
+    choices.push(ROW[rng.gen_range(0, row_len)]);
+    choices.push(ROW[rng.gen_range(0, row_len)]);
+    choices.push(ROW[rng.gen_range(0, row_len)]);
     let picks = choices.clone();
     choices.sort();
     choices.dedup();

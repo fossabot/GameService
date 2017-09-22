@@ -17,7 +17,9 @@ impl Coin {
         let mut rng = thread_rng();
         if rng.gen_weighted_bool(WEIGHT) {
             Coin::Heads
-        } else { Coin::Tails }
+        } else {
+            Coin::Tails
+        }
     }
 }
 
@@ -25,35 +27,47 @@ impl Coin {
 pub struct CoinTossResult {
     status_code: u16,
     bet: u64,
-    result: Result<Coin, String>
+    result: Result<Coin, String>,
 }
 
 impl CoinTossResult {
-    pub fn ok(bet: u64, side: Coin) -> Self{
+    pub fn ok(bet: u64, side: Coin) -> Self {
         Self {
             status_code: 200,
             bet: bet,
-            result: Ok(side)
+            result: Ok(side),
         }
     }
     pub fn err(bet: u64, err: String) -> Self {
         Self {
             status_code: 501,
             bet: bet,
-            result: Err(err)
+            result: Err(err),
         }
     }
 }
 
 pub fn guess_side(bet: u64, side: &str) -> CoinTossResult {
-    let valid: bool =["heads", "h", "tails", "t"].iter().any(|&i| i == side.to_lowercase());
-    if !valid { return CoinTossResult::err(bet, String::from("Not a valid side, heads/tails.")) };
-    let guessed_side: Coin = if side.starts_with('h') { Coin::Heads } else { Coin::Tails };
+    let valid: bool = ["heads", "h", "tails", "t"]
+        .iter()
+        .any(|&i| i == side.to_lowercase());
+    if !valid {
+        return CoinTossResult::err(bet, String::from("Not a valid side, heads/tails."));
+    };
+    let guessed_side: Coin = if side.starts_with('h') {
+        Coin::Heads
+    } else {
+        Coin::Tails
+    };
     let side = Coin::flip();
-    if guessed_side == side { CoinTossResult::ok(bet + (bet/2), side) } else { CoinTossResult::ok(0, side) }
+    if guessed_side == side {
+        CoinTossResult::ok(bet + (bet / 2), side)
+    } else {
+        CoinTossResult::ok(0, side)
+    }
 }
 
 #[bench]
 fn bench_coin(bench: &mut Bencher) {
-    bench.iter(|| {guess_side(0, "h")})
+    bench.iter(|| guess_side(0, "h"))
 }

@@ -1,2 +1,2 @@
 mod coin;
-pub use self::coin::{Coin, CoinTossResult, guess_side};
+pub use self::coin::{guess_side, Coin, CoinTossResult};

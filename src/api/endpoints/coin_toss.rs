@@ -7,6 +7,6 @@ type RouteResponseJson = JsonResp<JsonValue>;
 
 #[allow(needless_pass_by_value)]
 #[get("/<guess>/<bet>")]
-fn coin_flip(guess: String, bet: u64) -> RouteResponseJson{
+fn coin_toss(guess: String, bet: u64) -> RouteResponseJson {
     Json(to_value(guess_side(bet, &guess)).unwrap())
 }
