@@ -36,6 +36,7 @@ version = "0.3.2"
 [dependencies.rocket_contrib]
 default-features = false
 features = ["json"]
+optional = true
 version = "0.3.2"
 
 [features]
@@ -43,4 +44,5 @@ default = ["web"]
 web = [
     "rocket",
     "rocket_codegen",
+    "rocket_contrib",
 ]
