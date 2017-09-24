@@ -14,7 +14,7 @@ type RouteResponseJson = JsonResp<JsonValue>;
 
 #[get("/")]
 fn active_sessions(db_pool: State<ConnectionPool>) -> RouteResponseJson {
-    use schema::blackjack::dsl::*;
+    use games_microservice::schema::blackjack::dsl::*;
     let conn = db_pool.clone().get().unwrap();
     match blackjack
         .filter(status.is_null())

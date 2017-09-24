@@ -1,14 +1,6 @@
 #![recursion_limit = "128"]
-#![feature(plugin, custom_derive, test, const_fn)]
-#![plugin(rocket_codegen)]
+#![feature(custom_derive, test, const_fn)]
 #![allow(unknown_lints)]
-
-
-#[macro_use]
-extern crate serde_json;
-
-extern crate rocket;
-extern crate rocket_contrib;
 
 #[macro_use]
 extern crate diesel;
@@ -29,14 +21,13 @@ use std::env;
 pub use diesel::prelude::*;
 pub use diesel::pg::PgConnection;
 
-mod api;
+pub mod api;
 
 pub type ConnectionPool = r2d2::Pool<r2d2_diesel::ConnectionManager<PgConnection>>;
 
 pub mod schema;
 pub mod models;
-#[cfg(any(test))]
-mod test;
+
 
 pub fn establish_connection_pool() -> ConnectionPool {
     dotenv().ok();
@@ -68,6 +59,4 @@ pub fn establish_connection_pool() -> ConnectionPool {
     pool
 }
 
-pub fn create_rocket() -> rocket::Rocket {
-    api::endpoints::router(rocket::ignite().manage(establish_connection_pool()))
-}
+
