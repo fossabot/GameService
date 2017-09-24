@@ -58,5 +58,3 @@ pub fn establish_connection_pool() -> ConnectionPool {
     }
     pool
 }
-
-
