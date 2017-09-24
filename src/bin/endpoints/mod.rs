@@ -1,7 +1,9 @@
+
 use rocket::Rocket;
 mod blackjack_route;
 mod slot_machine;
 mod coin_toss;
+mod rps;
 
 pub fn router(rocket: Rocket) -> Rocket {
     rocket
@@ -18,4 +20,7 @@ pub fn router(rocket: Rocket) -> Rocket {
         )
         .mount("/slot_machine", routes![slot_machine::slots])
         .mount("/coin_toss", routes![coin_toss::coin_toss])
+        .mount("/rps", routes![rps::rps])
 }
+#[cfg(test)]
+mod test;

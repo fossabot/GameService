@@ -1,4 +1,5 @@
 use api::blackjack::{BlackJack, GameState};
+
 #[derive(Serialize, Deserialize)]
 pub struct Success {
     pub player_id: u64,
@@ -11,8 +12,6 @@ pub struct Success {
     pub player_can_hit: bool,
     pub dealer_can_hit: bool, // This should always be false if state is set
 }
-
-
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {

@@ -4,10 +4,10 @@ use api::blackjack::DECK_OF_CARDS;
 use rand::{thread_rng, Rng};
 use std::fmt;
 
+#[derive(Default)]
 pub struct Deck {
     pub cards: Vec<Card>,
 }
-
 
 impl Deck {
     #[allow(unused_mut)]

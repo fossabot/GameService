@@ -2,11 +2,10 @@ use api::blackjack::Card;
 #[cfg(test)]
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Default)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }
-
 
 impl Hand {
     pub fn new() -> Self {

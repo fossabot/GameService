@@ -31,3 +31,4 @@ And configure [rocket](https://rocket.rs/guide/configuration/)
 #### Sample Responses:
 - [BlackJack](API/BlackJack.md)
 - [SlotMachine](API/SlotMachine.md)
+- [CoinToss](API/CoinToss.md)

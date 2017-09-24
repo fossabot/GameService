@@ -1,10 +1,10 @@
 extern crate test;
-use super::serde_json;
+use serde_json;
 
 use rocket;
 use rocket::local::Client;
 use api::blackjack::BlackJackResponse;
-use api::endpoints::router;
+use endpoints::router;
 
 use establish_connection_pool;
 use self::test::Bencher;
@@ -123,7 +123,7 @@ fn test_blackjack_routes() {
 }
 
 #[bench]
-fn bench_blackjack(b: &mut Bencher) {
+fn bench_blackjack_routes(b: &mut Bencher) {
     let client = create_client(true);
     b.iter(|| {
         client.post("/blackjack/16/create/1").dispatch();
