@@ -1,6 +1,7 @@
 #[derive(Serialize, Deserialize)]
 pub struct Game {
     bet: u64,
+    gain: i64,
     result: Option<bool>,
     computer: String,
     player: String,
@@ -19,43 +20,47 @@ pub struct Response {
 }
 
 impl Response {
+    /// Creates a response for a win
     pub fn win(bet: u64, player: String, computer: String) -> Self {
-        let bet: u64 = (bet as f64 * 1.25) as u64;
+        let gain: i64 = (bet as f64 * 0.25) as i64;
         Self {
             status_code: 200,
             status: Ok(Game {
                 bet,
+                gain,
                 result: Some(true),
                 player,
                 computer,
             }),
         }
     }
-
-    pub fn lose(player: String, computer: String) -> Self {
+    /// Creates a Response for a loss
+    pub fn lose(bet: u64, player: String, computer: String) -> Self {
         Self {
             status_code: 200,
             status: Ok(Game {
-                bet: 0,
+                bet,
+                gain: -1 * bet as i64,
                 result: Some(false),
                 player,
                 computer,
             }),
         }
     }
-
+    /// Creates a response for a win
     pub fn draw(bet: u64, player: String, computer: String) -> Self {
         Self {
             status_code: 200,
             status: Ok(Game {
                 bet,
+                gain: 0,
                 result: Some(false),
                 player,
                 computer,
             }),
         }
     }
-
+    /// Creates a response for an error
     pub fn error(bet: u64, msg: String) -> Self {
         Self {
             status_code: 501,

@@ -8,6 +8,7 @@ pub struct Success {
     pub player_score: u64,
     pub dealer_score: u64, // Only first card value is shown on first turn
     pub bet: u64,
+    pub gain: i64,
     pub game_state: Option<bool>,
     pub player_can_hit: bool,
     pub dealer_can_hit: bool, // This should always be false if state is set
@@ -32,10 +33,17 @@ impl Response {
         } else {
             bj.dealer.export()
         };
+        let mut gain: i64 = 0;
         let state: Option<bool> = match bj.status() {
             GameState::InProgress => None,
-            GameState::PlayerWon => Some(true),
-            GameState::PlayerLost => Some(false),
+            GameState::PlayerWon => {
+                gain = bj.bet as i64;
+                Some(true)
+            }
+            GameState::PlayerLost => {
+                gain = -1 * bj.bet as i64;
+                Some(false)
+            }
         };
         Response {
             status_code: 200,
@@ -46,6 +54,7 @@ impl Response {
                 player_score: player_score,
                 dealer_score: dealer_score,
                 bet: bj.bet,
+                gain: gain,
                 game_state: state,
                 player_can_hit: !bj.player_stay_status,
                 dealer_can_hit: !bj.dealer_stay_status,

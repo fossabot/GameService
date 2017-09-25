@@ -138,8 +138,8 @@ fn test_slot_route(b: &mut Bencher) {
     b.iter(|| {
         let mut resp = client.get("/slot_machine/23").dispatch();
         let resp: serde_json::Value = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
-        let ret: &f64 = &resp["return"].as_f64().unwrap();
-        if !vec![0f64, 34f64, 46f64].iter().any(|i| i == ret) {
+        let ret: &i64 = &resp["status"]["Ok"]["gain"].as_i64().unwrap();
+        if !vec![-23, 11, 23].iter().any(|i| i == ret) {
             panic!("SLOTS DID BAD MATH");
         }
     })

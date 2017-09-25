@@ -25,34 +25,55 @@ impl Coin {
 
 #[derive(Serialize, Deserialize)]
 pub struct CoinTossResult {
-    status_code: u16,
+    player: Coin,
+    computer: Coin,
     bet: u64,
-    result: Result<Coin, String>,
+    gain: i64,
 }
 
-impl CoinTossResult {
-    pub fn ok(bet: u64, side: Coin) -> Self {
+#[derive(Serialize, Deserialize)]
+pub struct CoinTossResponse {
+    status_code: u16,
+    status: Result<CoinTossResult, String>,
+}
+
+impl CoinTossResponse {
+    pub fn win(bet: u64, side: Coin, guess: Coin) -> Self {
         Self {
             status_code: 200,
-            bet: bet,
-            result: Ok(side),
+            status: Ok(CoinTossResult {
+                player: guess,
+                computer: side,
+                bet,
+                gain: (bet / 2) as i64,
+            }),
         }
     }
-    pub fn err(bet: u64, err: String) -> Self {
+    pub fn lose(bet: u64, side: Coin, guess: Coin) -> Self {
+        Self {
+            status_code: 200,
+            status: Ok(CoinTossResult {
+                player: guess,
+                computer: side,
+                bet,
+                gain: -1 * bet as i64,
+            }),
+        }
+    }
+    pub fn err(err: String) -> Self {
         Self {
             status_code: 501,
-            bet: bet,
-            result: Err(err),
+            status: Err(err),
         }
     }
 }
 
-pub fn guess_side(bet: u64, side: &str) -> CoinTossResult {
+pub fn guess_side(bet: u64, side: &str) -> CoinTossResponse {
     let valid: bool = ["heads", "h", "tails", "t"]
         .iter()
         .any(|&i| i == side.to_lowercase());
     if !valid {
-        return CoinTossResult::err(bet, String::from("Not a valid side, heads/tails."));
+        return CoinTossResponse::err(String::from("Not a valid side, heads/tails."));
     };
     let guessed_side: Coin = if side.starts_with('h') {
         Coin::Heads
@@ -61,9 +82,9 @@ pub fn guess_side(bet: u64, side: &str) -> CoinTossResult {
     };
     let side = Coin::flip();
     if guessed_side == side {
-        CoinTossResult::ok(bet + (bet / 2), side)
+        CoinTossResponse::win(bet, side, guessed_side)
     } else {
-        CoinTossResult::ok(0, side)
+        CoinTossResponse::lose(bet, side, guessed_side)
     }
 }
 

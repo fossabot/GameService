@@ -243,9 +243,8 @@ impl BlackJack {
             .expect("Error deleting Previous BlackJack Test data");
     }
 
-    // Consumes session and returns bet
+    /// Consumes session and returns Gain
     pub fn claim(mut self) -> Result<u64, Self> {
-        // Bet
         match self.status() {
             GameState::InProgress => Err(self),
             GameState::PlayerWon => {

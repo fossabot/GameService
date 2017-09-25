@@ -12,9 +12,10 @@ pub fn slot_machine() -> (f64, Vec<&'static str>) {
     choices.sort();
     choices.dedup();
     let mult: f64 = match choices.len() {
-        3 => 0f64,
-        2 => 1.5,
-        _ => 2f64, // _ = 1
+        3 => -1.0,
+        2 => 0.5,
+        1 => 1.0,
+        _ => unreachable!()
     };
     (mult, picks)
 }
