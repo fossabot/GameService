@@ -16,5 +16,4 @@ fn slots(bet: u64) -> RouteResponseJson {
                 "gain": gain
             }}
     }))
-
 }

@@ -1,8 +1,4 @@
-#[cfg(test)]
-extern crate test;
 use rand::{thread_rng, Rng};
-#[cfg(test)]
-use self::test::Bencher;
 
 const WEIGHT: u32 = 2;
 
@@ -88,7 +84,13 @@ pub fn guess_side(bet: u64, side: &str) -> CoinTossResponse {
     }
 }
 
-#[bench]
-fn bench_coin(bench: &mut Bencher) {
-    bench.iter(|| guess_side(0, "h"))
+#[cfg(test)]
+mod test {
+    extern crate test;
+    use self::test::Bencher;
+    use super::guess_side;
+    #[bench]
+    fn bench_coin(bench: &mut Bencher) {
+        bench.iter(|| guess_side(0, "h"))
+    }
 }

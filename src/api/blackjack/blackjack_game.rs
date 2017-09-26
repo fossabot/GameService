@@ -169,13 +169,6 @@ impl BlackJack {
     pub fn status(&self) -> GameState {
         let player_score = self.player.score();
         let dealer_score = self.dealer.score();
-        if player_score > 21 {
-            return GameState::PlayerLost;
-        };
-        if dealer_score > 21 {
-            return GameState::PlayerWon;
-        };
-
         if self.player.cards.len() == 5 {
             return GameState::PlayerWon;
         };
@@ -194,9 +187,16 @@ impl BlackJack {
         if player_score == dealer_score {
             return GameState::PlayerLost;
         };
+        if player_score > 21 {
+            return GameState::PlayerLost;
+        };
+        if dealer_score > 21 {
+            return GameState::PlayerWon;
+        };
         if player_score > dealer_score {
             return GameState::PlayerWon;
-        } else if player_score < dealer_score {
+        }
+        if player_score < dealer_score {
             return GameState::PlayerLost;
         }
         GameState::InProgress

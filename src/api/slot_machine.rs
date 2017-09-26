@@ -15,11 +15,23 @@ pub fn slot_machine() -> (f64, Vec<&'static str>) {
         3 => -1.0,
         2 => 0.5,
         1 => 1.0,
-        _ => unreachable!()
+        _ => unreachable!(),
     };
     (mult, picks)
 }
 
 
 #[cfg(any(test, bench))]
-mod tests;
+mod test {
+    extern crate test;
+    use api::slot_machine::slot_machine;
+    use self::test::Bencher;
+    #[bench]
+    fn test_slot_machine(b: &mut Bencher) {
+        b.iter(|| {
+            let (mult, picks) = slot_machine();
+            assert!([-1f64, 0.5, 1f64].iter().any(|i| i == &mult));
+            assert!(picks.len() <= 3);
+        })
+    }
+}
