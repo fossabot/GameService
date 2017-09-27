@@ -108,7 +108,7 @@ impl BlackJack {
                 cards: session
                     .player_hand
                     .iter()
-                    .map(|card| Card::new(card).unwrap_or_default())
+                    .map(|card| Card::new(card))
                     .collect(),
             },
             player_id: session.id as u64,
@@ -116,15 +116,11 @@ impl BlackJack {
                 cards: session
                     .dealer_hand
                     .iter()
-                    .map(|card| Card::new(card).unwrap_or_default())
+                    .map(|card| Card::new(card))
                     .collect(),
             },
             deck: Deck {
-                cards: session
-                    .deck
-                    .iter()
-                    .map(|card| Card::new(card).unwrap_or_default())
-                    .collect(),
+                cards: session.deck.iter().map(|card| Card::new(card)).collect(),
             },
             bet: player_bet as u64,
             player_stay_status: session.player_stay,

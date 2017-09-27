@@ -33,10 +33,7 @@ impl Deck {
         }
     }
     pub fn export(&self) -> Vec<String> {
-        self.cards
-            .iter()
-            .map(|card| card.name.to_string())
-            .collect()
+        self.cards.iter().map(|card| card.to_string()).collect()
     }
 }
 

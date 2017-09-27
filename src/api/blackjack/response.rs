@@ -26,10 +26,7 @@ impl Response {
         let (player_score, player_hand) = bj.player.export();
         let (dealer_score, dealer_hand) = if bj.first_turn {
             let first_card = &bj.dealer.cards[0];
-            (
-                u64::from(first_card.value),
-                vec![first_card.name.to_string()],
-            )
+            (u64::from(first_card.value), vec![first_card.to_string()])
         } else {
             bj.dealer.export()
         };

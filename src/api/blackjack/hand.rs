@@ -46,7 +46,7 @@ impl Hand {
             self.score(),
             self.cards
                 .iter()
-                .map(|card| card.name.to_string())
+                .map(|card| card.to_string())
                 .collect::<Vec<String>>(),
         )
     }
