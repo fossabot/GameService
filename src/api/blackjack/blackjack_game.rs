@@ -1,5 +1,5 @@
 use ConnectionPool;
-use api::blackjack::{Card, Deck, Hand, Session};
+use api::blackjack::{Deck, Hand, Session};
 
 use diesel::prelude::*;
 use diesel;
@@ -108,7 +108,7 @@ impl BlackJack {
                 cards: session
                     .player_hand
                     .iter()
-                    .map(|card| Card::new(card))
+                    .map(|card| card.parse().unwrap())
                     .collect(),
             },
             player_id: session.id as u64,
@@ -116,11 +116,15 @@ impl BlackJack {
                 cards: session
                     .dealer_hand
                     .iter()
-                    .map(|card| Card::new(card))
+                    .map(|card| card.parse().unwrap())
                     .collect(),
             },
             deck: Deck {
-                cards: session.deck.iter().map(|card| Card::new(card)).collect(),
+                cards: session
+                    .deck
+                    .iter()
+                    .map(|card| card.parse().unwrap())
+                    .collect(),
             },
             bet: player_bet as u64,
             player_stay_status: session.player_stay,

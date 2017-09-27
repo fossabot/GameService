@@ -52,7 +52,7 @@ impl CoinTossResponse {
                 player: guess,
                 computer: side,
                 bet,
-                gain: -1 * bet as i64,
+                gain: -(bet as i64),
             }),
         }
     }

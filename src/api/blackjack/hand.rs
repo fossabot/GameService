@@ -1,6 +1,4 @@
 use api::blackjack::Card;
-#[cfg(test)]
-use std::fmt;
 
 #[derive(Default)]
 pub struct Hand {
@@ -49,12 +47,5 @@ impl Hand {
                 .map(|card| card.to_string())
                 .collect::<Vec<String>>(),
         )
-    }
-}
-
-#[cfg(test)]
-impl fmt::Display for Hand {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Score: {}", self.score())
     }
 }

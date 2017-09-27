@@ -38,7 +38,7 @@ impl Response {
                 Some(true)
             }
             GameState::PlayerLost => {
-                gain = -1 * bj.bet as i64;
+                gain = -(bj.bet as i64);
                 Some(false)
             }
         };

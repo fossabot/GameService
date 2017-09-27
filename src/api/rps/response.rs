@@ -40,7 +40,7 @@ impl Response {
             status_code: 200,
             status: Ok(Game {
                 bet,
-                gain: -1 * bet as i64,
+                gain: -(bet as i64),
                 result: Some(false),
                 player,
                 computer,

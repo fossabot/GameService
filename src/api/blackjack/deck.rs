@@ -2,7 +2,6 @@ use api::blackjack::Card;
 use api::blackjack::DECK_OF_CARDS;
 #[cfg(not(any(test, bench)))]
 use rand::{thread_rng, Rng};
-use std::fmt;
 
 #[derive(Default)]
 pub struct Deck {
@@ -34,12 +33,5 @@ impl Deck {
     }
     pub fn export(&self) -> Vec<String> {
         self.cards.iter().map(|card| card.to_string()).collect()
-    }
-}
-
-// A deck's display shouldn't reveal the contents of the deck
-impl fmt::Display for Deck {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Deck: {} cards", self.cards.len())
     }
 }
