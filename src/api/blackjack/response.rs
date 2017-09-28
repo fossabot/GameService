@@ -30,15 +30,12 @@ impl Response {
         } else {
             bj.dealer.export()
         };
-        let mut gain: i64 = 0;
         let state: Option<bool> = match bj.status() {
             GameState::InProgress => None,
             GameState::PlayerWon => {
-                gain = bj.bet as i64;
                 Some(true)
             }
             GameState::PlayerLost => {
-                gain = -(bj.bet as i64);
                 Some(false)
             }
         };
@@ -51,7 +48,7 @@ impl Response {
                 player_score: player_score,
                 dealer_score: dealer_score,
                 bet: bj.bet,
-                gain: gain,
+                gain: bj.gain,
                 game_state: state,
                 player_can_hit: !bj.player_stay_status,
                 dealer_can_hit: !bj.dealer_stay_status,
@@ -62,6 +59,32 @@ impl Response {
         Self {
             status_code: error_code,
             status: Err(error_message.to_string()),
+        }
+    }
+}
+#[derive(Serialize, Deserialize)]
+pub struct SessionCount {
+    pub status_code: u16,
+    pub status: Result<Counter, String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Counter {
+    pub active_sessions: u64,
+}
+
+
+impl SessionCount {
+    pub fn count(active_sessions: u64) -> Self {
+        Self {
+            status_code: 200,
+            status: Ok(Counter { active_sessions }),
+        }
+    }
+    pub fn err(err_msg: &str) -> Self {
+        Self {
+            status_code: 500,
+            status: Err(err_msg.to_owned()),
         }
     }
 }

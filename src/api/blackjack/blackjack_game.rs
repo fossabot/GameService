@@ -20,6 +20,7 @@ pub struct BlackJack {
     pub first_turn: bool, // Used for responses
     pub player_stay_status: bool,
     pub dealer_stay_status: bool,
+    pub gain: i64,
     db_pool: ConnectionPool,
     claimed: bool,
 }
@@ -80,6 +81,7 @@ impl BlackJack {
             dealer_stay_status: false,
             db_pool: db_pool.clone(),
             claimed: false,
+            gain: 0i64,
         })
     }
     pub fn restore(db_pool: ConnectionPool, player: u64) -> Result<Self, ()> {
@@ -132,6 +134,7 @@ impl BlackJack {
             first_turn: session.first_turn,
             db_pool: db_pool.clone(),
             claimed: false,
+            gain: 0i64,
         })
     }
     pub fn player_hit(&mut self) -> Result<(), &'static str> {
@@ -244,16 +247,18 @@ impl BlackJack {
     }
 
     /// Consumes session and returns Gain
-    pub fn claim(mut self) -> Result<u64, Self> {
+    pub fn claim(mut self) -> Result<Self, Self> {
         match self.status() {
             GameState::InProgress => Err(self),
             GameState::PlayerWon => {
                 self.claimed = true;
-                Ok(self.bet * 2)
+                self.gain = self.bet as i64;
+                Ok(self)
             }
             GameState::PlayerLost => {
                 self.claimed = true;
-                Ok(0)
+                self.gain = -(self.bet as i64);
+                Ok(self)
             }
         }
     }
