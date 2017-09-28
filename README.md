@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/Mikibot/GameService.svg?branch=master)](https://travis-ci.org/Mikibot/GameService)
 
+# NOTICE: The readme / API Examples are not up to date
+
 ## Install Requirements:
 - [libpq](https://www.postgresql.org)
 - [rust](https://rustup.rs)
@@ -8,8 +10,8 @@
 ## Setup:
 Set the environment variables:
 
-	DATABASE_URL
-	TEST_DATABASE_URL
+	GAMESERVICE_DATABASE_URL
+	GAMESERVICE_TEST_DATABASE_URL
 
 And configure [rocket](https://rocket.rs/guide/configuration/)
 
@@ -24,11 +26,14 @@ And configure [rocket](https://rocket.rs/guide/configuration/)
 	- `POST: /<uid>/stay` - Tell the dealer you are done, dealer will make its play.
 	- `POST: /<uid>/claim` - Returns the amount bet + reward, either 0 or 2x the `bet`
 - `/slot_machine`
-	- `GET: /<bet>` - returns the bet mutiplied by 0/1.5/2
+	- `GET: /<bet>`
 - `/coin_toss`
-	- `GET: /<guess>/<bet>` - Valid guesses are `h/heads/t/tails` if its your guess, bet is mutiplied by 1.5 otherwise 0.
+	- `GET: /<guess>/<bet>` - Valid guesses are `h/heads/t/tails`
+- `/rps/`
+	- `GET: /<weapon>/<bet>`
 
 #### Sample Responses:
 - [BlackJack](API/BlackJack.md)
 - [SlotMachine](API/SlotMachine.md)
 - [CoinToss](API/CoinToss.md)
+- [RPS](API/RPS.md)

@@ -5,12 +5,10 @@
 extern crate diesel;
 extern crate games_microservice;
 
-#[macro_use]
-extern crate serde_json;
-
 #[allow(unused_imports, useless_attribute)]
 #[macro_use]
 extern crate serde_derive;
+
 
 #[cfg(feature = "web")]
 extern crate rocket;

@@ -1,5 +1,5 @@
 use ConnectionPool;
-use api::blackjack::{Card, Deck, Hand, Session};
+use api::blackjack::{Deck, Hand, Session};
 
 use diesel::prelude::*;
 use diesel;
@@ -11,6 +11,10 @@ pub enum GameState {
     PlayerLost,
 }
 
+// TODO: Implement Surrender
+// TODO: Implement Insurrence
+
+
 pub struct BlackJack {
     pub player: Hand,
     pub player_id: u64,
@@ -20,6 +24,7 @@ pub struct BlackJack {
     pub first_turn: bool, // Used for responses
     pub player_stay_status: bool,
     pub dealer_stay_status: bool,
+    pub gain: i64,
     db_pool: ConnectionPool,
     claimed: bool,
 }
@@ -80,6 +85,7 @@ impl BlackJack {
             dealer_stay_status: false,
             db_pool: db_pool.clone(),
             claimed: false,
+            gain: 0i64,
         })
     }
     pub fn restore(db_pool: ConnectionPool, player: u64) -> Result<Self, ()> {
@@ -108,7 +114,7 @@ impl BlackJack {
                 cards: session
                     .player_hand
                     .iter()
-                    .map(|card| Card::new(card).unwrap_or_default())
+                    .map(|card| card.parse().unwrap())
                     .collect(),
             },
             player_id: session.id as u64,
@@ -116,14 +122,14 @@ impl BlackJack {
                 cards: session
                     .dealer_hand
                     .iter()
-                    .map(|card| Card::new(card).unwrap_or_default())
+                    .map(|card| card.parse().unwrap())
                     .collect(),
             },
             deck: Deck {
                 cards: session
                     .deck
                     .iter()
-                    .map(|card| Card::new(card).unwrap_or_default())
+                    .map(|card| card.parse().unwrap())
                     .collect(),
             },
             bet: player_bet as u64,
@@ -132,6 +138,7 @@ impl BlackJack {
             first_turn: session.first_turn,
             db_pool: db_pool.clone(),
             claimed: false,
+            gain: 0i64,
         })
     }
     pub fn player_hit(&mut self) -> Result<(), &'static str> {
@@ -169,13 +176,6 @@ impl BlackJack {
     pub fn status(&self) -> GameState {
         let player_score = self.player.score();
         let dealer_score = self.dealer.score();
-        if player_score > 21 {
-            return GameState::PlayerLost;
-        };
-        if dealer_score > 21 {
-            return GameState::PlayerWon;
-        };
-
         if self.player.cards.len() == 5 {
             return GameState::PlayerWon;
         };
@@ -194,9 +194,16 @@ impl BlackJack {
         if player_score == dealer_score {
             return GameState::PlayerLost;
         };
+        if player_score > 21 {
+            return GameState::PlayerLost;
+        };
+        if dealer_score > 21 {
+            return GameState::PlayerWon;
+        };
         if player_score > dealer_score {
             return GameState::PlayerWon;
-        } else if player_score < dealer_score {
+        }
+        if player_score < dealer_score {
             return GameState::PlayerLost;
         }
         GameState::InProgress
@@ -243,18 +250,19 @@ impl BlackJack {
             .expect("Error deleting Previous BlackJack Test data");
     }
 
-    // Consumes session and returns bet
-    pub fn claim(mut self) -> Result<u64, Self> {
-        // Bet
+    /// Consumes session and returns Gain
+    pub fn claim(mut self) -> Result<Self, Self> {
         match self.status() {
             GameState::InProgress => Err(self),
             GameState::PlayerWon => {
                 self.claimed = true;
-                Ok(self.bet * 2)
+                self.gain = self.bet as i64;
+                Ok(self)
             }
             GameState::PlayerLost => {
                 self.claimed = true;
-                Ok(0)
+                self.gain = -(self.bet as i64);
+                Ok(self)
             }
         }
     }

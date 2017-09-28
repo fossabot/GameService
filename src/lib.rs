@@ -7,6 +7,8 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_codegen;
 extern crate dotenv;
+#[macro_use]
+extern crate lazy_static;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
@@ -33,9 +35,11 @@ pub fn establish_connection_pool() -> ConnectionPool {
     dotenv().ok();
 
     #[cfg(not(any(test, bench)))]
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url =
+        env::var("GAMESERVICE_DATABASE_URL").expect("GAMESERVICE_DATABASE_URL must be set");
     #[cfg(any(test, bench))]
-    let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set");
+    let database_url = env::var("GAMESERVICE_TEST_DATABASE_URL")
+        .expect("GAMESERVICE_TEST_DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     let pool = r2d2::Pool::new(
         match env::var("MAX_POOL") {

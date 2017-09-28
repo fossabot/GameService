@@ -8,6 +8,7 @@ pub struct Success {
     pub player_score: u64,
     pub dealer_score: u64, // Only first card value is shown on first turn
     pub bet: u64,
+    pub gain: i64,
     pub game_state: Option<bool>,
     pub player_can_hit: bool,
     pub dealer_can_hit: bool, // This should always be false if state is set
@@ -25,10 +26,7 @@ impl Response {
         let (player_score, player_hand) = bj.player.export();
         let (dealer_score, dealer_hand) = if bj.first_turn {
             let first_card = &bj.dealer.cards[0];
-            (
-                u64::from(first_card.value),
-                vec![first_card.name.to_string()],
-            )
+            (u64::from(first_card.value), vec![first_card.to_string()])
         } else {
             bj.dealer.export()
         };
@@ -46,6 +44,7 @@ impl Response {
                 player_score: player_score,
                 dealer_score: dealer_score,
                 bet: bj.bet,
+                gain: bj.gain,
                 game_state: state,
                 player_can_hit: !bj.player_stay_status,
                 dealer_can_hit: !bj.dealer_stay_status,
@@ -56,6 +55,32 @@ impl Response {
         Self {
             status_code: error_code,
             status: Err(error_message.to_string()),
+        }
+    }
+}
+#[derive(Serialize, Deserialize)]
+pub struct SessionCount {
+    pub status_code: u16,
+    pub status: Result<Counter, String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Counter {
+    pub active_sessions: u64,
+}
+
+
+impl SessionCount {
+    pub fn count(active_sessions: u64) -> Self {
+        Self {
+            status_code: 200,
+            status: Ok(Counter { active_sessions }),
+        }
+    }
+    pub fn err(err_msg: &str) -> Self {
+        Self {
+            status_code: 500,
+            status: Err(err_msg.to_owned()),
         }
     }
 }

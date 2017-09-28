@@ -14,7 +14,7 @@ pub fn rps(bet: u64, weapon: &str) -> Response {
     if weapon > comp {
         return Response::win(bet, weapon.to_string(), comp.to_string());
     }; // Win
-    Response::lose(weapon.to_string(), comp.to_string())
+    Response::lose(bet, weapon.to_string(), comp.to_string())
 }
 
 #[cfg(test)]

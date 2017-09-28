@@ -1,12 +1,8 @@
-use api::coin_toss::guess_side;
+use api::coin_toss::{guess_side, CoinTossResponse};
 use rocket_contrib::Json;
-use rocket_contrib::json::Json as JsonResp;
-use serde_json::{to_value, Value as JsonValue};
-
-type RouteResponseJson = JsonResp<JsonValue>;
 
 #[allow(needless_pass_by_value)]
 #[get("/<guess>/<bet>")]
-fn coin_toss(guess: String, bet: u64) -> RouteResponseJson {
-    Json(to_value(guess_side(bet, &guess)).unwrap())
+fn coin_toss(guess: String, bet: u64) -> Json<CoinTossResponse> {
+    Json(guess_side(bet, &guess))
 }
