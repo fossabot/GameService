@@ -1,8 +1,8 @@
-extern crate test;
 extern crate serde_json;
+extern crate test;
 use rocket;
 use rocket::local::Client;
-use api::blackjack::BlackJackResponse;
+use api::blackjack::Response;
 use endpoints::router;
 
 use establish_connection_pool;
@@ -52,14 +52,14 @@ fn test_blackjack_routes() {
     // Test Creation and info route
     {
         let mut resp = client.post("/blackjack/0/create/1").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         let resp = resp.status
             .expect("An Error has occurred on session creation");
         assert_eq!(resp.dealer_hand.len(), 1);
         assert!(resp.game_state.is_none());
         let mut resp = client.get("/blackjack/0").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         assert!(
             resp.status
@@ -71,13 +71,13 @@ fn test_blackjack_routes() {
     // Test Creation route fails
     {
         let mut resp = client.post("/blackjack/0/create/1").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 501);
     }
     // Test Hit Route
     {
         let mut resp = client.post("/blackjack/0/hit").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         assert!(match resp.status {
             Ok(stat) => stat.dealer_hand.len() >= 2,
@@ -87,7 +87,7 @@ fn test_blackjack_routes() {
     // Test Stay Route
     {
         let mut resp = client.post("/blackjack/0/stay").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         assert!(
             resp.status
@@ -99,13 +99,13 @@ fn test_blackjack_routes() {
     // Test Hit doesn't work
     {
         let mut resp = client.post("/blackjack/0/hit").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 501);
     }
     // Test claim route works
     {
         let mut resp = client.get("/blackjack/0").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         let status = resp.status.unwrap();
         let mut expected_gain = -1;
@@ -113,7 +113,7 @@ fn test_blackjack_routes() {
             expected_gain = 1;
         }
         let mut resp = client.post("/blackjack/0/claim").dispatch();
-        let resp: BlackJackResponse = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
+        let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         let status_code: u16 = resp.status_code as u16;
         let returned_gain: i64 = resp.status.unwrap().gain;
         assert_eq!(status_code, 200);

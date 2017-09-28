@@ -32,12 +32,8 @@ impl Response {
         };
         let state: Option<bool> = match bj.status() {
             GameState::InProgress => None,
-            GameState::PlayerWon => {
-                Some(true)
-            }
-            GameState::PlayerLost => {
-                Some(false)
-            }
+            GameState::PlayerWon => Some(true),
+            GameState::PlayerLost => Some(false),
         };
         Response {
             status_code: 200,

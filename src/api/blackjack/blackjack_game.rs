@@ -11,6 +11,10 @@ pub enum GameState {
     PlayerLost,
 }
 
+// TODO: Implement Surrender
+// TODO: Implement Insurrence
+
+
 pub struct BlackJack {
     pub player: Hand,
     pub player_id: u64,
