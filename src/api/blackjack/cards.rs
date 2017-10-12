@@ -11,6 +11,7 @@ pub struct Card {
     pub symbol: &'static str,
 }
 
+
 const NON_ROYALTY_CARDS: [&'static str; 10] = [
     "ACE",
     "TWOS",

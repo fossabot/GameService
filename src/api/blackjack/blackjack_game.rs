@@ -11,10 +11,9 @@ pub enum GameState {
     PlayerLost,
 }
 
+
 // TODO: Implement Surrender
 // TODO: Implement Insurrence
-
-
 pub struct BlackJack {
     pub player: Hand,
     pub player_id: u64,
@@ -28,6 +27,7 @@ pub struct BlackJack {
     db_pool: ConnectionPool,
     claimed: bool,
 }
+
 
 impl BlackJack {
     pub fn new(player_id: u64, new_bet: u64, db_pool: ConnectionPool) -> Option<Self> {
@@ -88,6 +88,7 @@ impl BlackJack {
             gain: 0i64,
         })
     }
+
     pub fn restore(db_pool: ConnectionPool, player: u64) -> Result<Self, ()> {
         use schema::blackjack::dsl::*;
         // TODO: Make this safer (low)
@@ -107,30 +108,17 @@ impl BlackJack {
         }
         let player_bet = session.bet.unwrap();
 
-
         Ok(Self {
             // TODO: Exceptions are not acceptable in production, handle them
             player: Hand {
-                cards: session
-                    .player_hand
-                    .iter()
-                    .map(|card| card.parse().unwrap())
-                    .collect(),
+                cards: c![card.parse().unwrap(), for card in &session.player_hand],
             },
             player_id: session.id as u64,
             dealer: Hand {
-                cards: session
-                    .dealer_hand
-                    .iter()
-                    .map(|card| card.parse().unwrap())
-                    .collect(),
+                cards: c![card.parse().unwrap(), for card in &session.dealer_hand],
             },
             deck: Deck {
-                cards: session
-                    .deck
-                    .iter()
-                    .map(|card| card.parse().unwrap())
-                    .collect(),
+                cards: c![card.parse().unwrap(), for card in &session.deck],
             },
             bet: player_bet as u64,
             player_stay_status: session.player_stay,
@@ -141,6 +129,7 @@ impl BlackJack {
             gain: 0i64,
         })
     }
+
     pub fn player_hit(&mut self) -> Result<(), &'static str> {
         match self.status() {
             GameState::InProgress => if !self.player_stay_status {
@@ -153,12 +142,14 @@ impl BlackJack {
             GameState::PlayerWon => Err("You already won"),
         }
     }
+
     pub fn player_stay(&mut self) {
         if !self.player_stay_status {
             self.player_stay_status = true;
             self.dealer_play().unwrap();
         }
     }
+
     fn dealer_hit(&mut self) -> Result<(), &'static str> {
         match self.status() {
             GameState::InProgress => if !self.dealer_stay_status {
@@ -170,9 +161,11 @@ impl BlackJack {
             GameState::PlayerLost => Err("The dealer already won"),
         }
     }
+
     fn dealer_stay(&mut self) {
         self.dealer_stay_status = true
     }
+
     pub fn status(&self) -> GameState {
         let player_score = self.player.score();
         let dealer_score = self.dealer.score();
@@ -208,6 +201,7 @@ impl BlackJack {
         }
         GameState::InProgress
     }
+
     // Computes dealer play
     pub fn dealer_play(&mut self) -> Result<(), &'static str> {
         if !self.player_stay_status {
@@ -220,6 +214,7 @@ impl BlackJack {
         self.dealer_stay();
         Ok(())
     }
+
     pub fn save(&self) {
         let conn = self.db_pool.clone().get().unwrap();
         let (game_status, bet): (Option<bool>, Option<i64>) = match self.status() {

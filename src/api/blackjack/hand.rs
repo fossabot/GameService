@@ -40,12 +40,6 @@ impl Hand {
         total
     }
     pub fn export(&self) -> (u64, Vec<String>) {
-        (
-            self.score(),
-            self.cards
-                .iter()
-                .map(|card| card.to_string())
-                .collect::<Vec<String>>(),
-        )
+        (self.score(), c![card.to_string(), for card in &self.cards])
     }
 }
