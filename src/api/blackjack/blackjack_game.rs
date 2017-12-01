@@ -30,6 +30,7 @@ pub struct BlackJack {
 
 
 impl BlackJack {
+    #[allow(needless_pass_by_value)]
     pub fn new(player_id: u64, new_bet: u64, db_pool: ConnectionPool) -> Option<Self> {
         use schema::blackjack as blackjack_schema;
         use schema::blackjack::dsl::*;
@@ -69,8 +70,8 @@ impl BlackJack {
                 player_stay: false,
                 status: None,
             };
-            let _: Session = diesel::insert(&sess)
-                .into(blackjack_schema::table)
+            let _: Session = diesel::insert_into(blackjack_schema::table)
+                .values(&sess)
                 .get_result(&*conn)
                 .expect("Error saving sessions");
         }
@@ -89,6 +90,7 @@ impl BlackJack {
         })
     }
 
+    #[allow(needless_pass_by_value)]
     pub fn restore(db_pool: ConnectionPool, player: u64) -> Result<Self, ()> {
         use schema::blackjack::dsl::*;
         // TODO: Make this safer (low)

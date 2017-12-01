@@ -12,7 +12,7 @@ pub struct Card {
 }
 
 
-const NON_ROYALTY_CARDS: [&'static str; 10] = [
+const NON_ROYALTY_CARDS: [&str; 10] = [
     "ACE",
     "TWOS",
     "THREES",
@@ -25,9 +25,9 @@ const NON_ROYALTY_CARDS: [&'static str; 10] = [
     "TENS",
 ];
 
-const VALID_SYMBOLS: [&'static str; 4] = ["HEARTS", "SPADES", "CLUBS", "DIAMONDS"];
+const VALID_SYMBOLS: [&str; 4] = ["HEARTS", "SPADES", "CLUBS", "DIAMONDS"];
 
-const ROYALTY_CARDS: [&'static str; 3] = ["JACKS", "KINGS", "QUEENS"];
+const ROYALTY_CARDS: [&str; 3] = ["JACKS", "KINGS", "QUEENS"];
 
 impl FromStr for Card {
     type Err = ParseCharError;

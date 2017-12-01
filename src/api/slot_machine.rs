@@ -1,6 +1,6 @@
 use rand::{thread_rng, Rng};
 // Returns multiplier
-const ROW: [&'static str; 7] = ["🍒", "🍊", "🍓", "🍍", "🍇", "🍉", "⭐"];
+const ROW: [&str; 7] = ["🍒", "🍊", "🍓", "🍍", "🍇", "🍉", "⭐"];
 
 #[derive(Serialize, Deserialize)]
 pub struct SlotMachine {
