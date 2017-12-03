@@ -1,4 +1,3 @@
-
 use rocket::Rocket;
 mod blackjack_route;
 mod slot_machine;

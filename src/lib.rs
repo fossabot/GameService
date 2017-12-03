@@ -1,21 +1,23 @@
 #![recursion_limit = "128"]
-#![feature(custom_derive, test, const_fn)]
+#![feature(custom_derive, test, const_fn, custom_attribute)]
 #![allow(unknown_lints)]
 
 #[macro_use]
+extern crate cfg_if;
+#[macro_use(c)]
+extern crate cute;
+#[macro_use]
 extern crate diesel;
 #[macro_use]
-extern crate diesel_codegen;
+extern crate diesel_migrations;
 extern crate dotenv;
 #[macro_use]
 extern crate lazy_static;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
-#[macro_use]
+#[macro_use(Serialize, Deserialize)]
 extern crate serde_derive;
-
-
 
 use r2d2_diesel::ConnectionManager;
 use dotenv::dotenv;
@@ -30,29 +32,33 @@ pub type ConnectionPool = r2d2::Pool<r2d2_diesel::ConnectionManager<PgConnection
 pub mod schema;
 pub mod models;
 
+embed_migrations!("migrations");
+
+cfg_if!{
+    if #[cfg(test)] {
+        fn db_url() -> String {
+            env::var("GAMESERVICE_TEST_DATABASE_URL").expect("GAMESERVICE_DATABASE_URL must be set")
+        }
+    } else {
+        fn db_url() -> String {
+
+            env::var("GAMESERVICE_TEST_DATABASE_URL").expect("GAMESERVICE_DATABASE_URL must be set")
+        }
+    }
+}
 
 pub fn establish_connection_pool() -> ConnectionPool {
     dotenv().ok();
-
-    #[cfg(not(any(test, bench)))]
-    let database_url =
-        env::var("GAMESERVICE_DATABASE_URL").expect("GAMESERVICE_DATABASE_URL must be set");
-    #[cfg(any(test, bench))]
-    let database_url = env::var("GAMESERVICE_TEST_DATABASE_URL")
-        .expect("GAMESERVICE_TEST_DATABASE_URL must be set");
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = r2d2::Pool::new(
-        match env::var("MAX_POOL") {
-            Ok(size) => r2d2::Config::builder()
-                .pool_size(size.parse::<u32>().unwrap())
-                .build(),
-            Err(_) => r2d2::Config::builder().pool_size(10).build(),
-        },
-        manager,
-    ).expect("Failed to create pool");
+    let manager = ConnectionManager::<PgConnection>::new(db_url());
+    let pool = (match env::var("MAX_POOL") {
+        Ok(size) => r2d2::Pool::builder()
+            .max_size(size.parse::<u32>().expect("MAX_POOL is not a u32"))
+            .build(manager),
+        Err(_) => r2d2::Pool::new(manager),
+    }).expect("Failed to create connection pool");
     // Run migrations
-    diesel::migrations::run_pending_migrations(&*(pool.clone().get().unwrap())).ok();
-    #[cfg(any(test, bench))]
+    embedded_migrations::run(&*(pool.clone().get().unwrap())).ok();
+    #[cfg(test)]
     {
         use schema::blackjack::dsl::*;
         let conn = pool.clone().get().unwrap();
