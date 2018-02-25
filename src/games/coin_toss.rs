@@ -22,10 +22,10 @@ impl Coin {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CoinTossResult {
-    player: Coin,
-    computer: Coin,
-    bet: u64,
-    gain: i64,
+    pub player: Coin,
+    pub computer: Coin,
+    pub bet: u64,
+    pub gain: i64,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -64,6 +64,9 @@ impl CoinTossResponse {
             status_code: 501,
             status: Err(err),
         }
+    }
+    pub fn result(&self) -> &Result<CoinTossResult, String> {
+        &self.status
     }
 }
 

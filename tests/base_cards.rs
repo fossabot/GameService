@@ -1,7 +1,7 @@
 extern crate games_microservice;
 use games_microservice::games::{StandardCard, StandardDeck};
 
-const CARDS: [&'static str; 56] = [
+const CARDS: [&str; 56] = [
     "HEARTS:ACE",
     "HEARTS:TWO",
     "HEARTS:THREE",

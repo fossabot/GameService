@@ -1,16 +1,16 @@
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Game {
-    bet: u64,
-    gain: i64,
-    result: Option<bool>,
-    computer: String,
-    player: String,
+    pub bet: u64,
+    pub gain: i64,
+    pub result: Option<bool>,
+    pub computer: String,
+    pub player: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Error {
     bet: u64,
-    msg: String,
+    pub msg: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -64,11 +64,14 @@ impl Response {
         }
     }
 
-    /// Creates a response for an error
+    /// Creates aresponse for an error
     pub fn error(bet: u64, msg: String) -> Self {
         Self {
             status_code: 501,
             status: Err(Error { bet, msg }),
         }
+    }
+    pub fn game(&self) -> &Result<Game, Error> {
+        &self.status
     }
 }

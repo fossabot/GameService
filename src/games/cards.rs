@@ -142,11 +142,11 @@ impl StandardCard {
     }
     pub fn suite_string(&self) -> String {
         use self::StandardCard::*;
-        String::from(match self {
-            &Hearts(_) => "Hearts",
-            &Clubs(_) => "Clubs",
-            &Spades(_) => "Spades",
-            &Diamonds(_) => "Diamonds",
+        String::from(match *self {
+            Hearts(_) => "Hearts",
+            Clubs(_) => "Clubs",
+            Spades(_) => "Spades",
+            Diamonds(_) => "Diamonds",
         })
     }
     pub fn face_as_string(&self) -> String {
@@ -166,10 +166,7 @@ impl From<StandardCard> for StandardCardFace {
     fn from(card: StandardCard) -> StandardCardFace {
         use self::StandardCard::*;
         match card {
-            Hearts(inner) => inner,
-            Spades(inner) => inner,
-            Clubs(inner) => inner,
-            Diamonds(inner) => inner,
+            Hearts(inner) | Spades(inner) | Clubs(inner) | Diamonds(inner) => inner,
         }
     }
 }
@@ -200,6 +197,6 @@ impl From<StandardCard> for u8 {
 
 impl From<StandardCard> for u64 {
     fn from(card: StandardCard) -> u64 {
-        u8::from(card) as u64
+        u64::from(u8::from(card))
     }
 }

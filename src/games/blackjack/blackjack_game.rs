@@ -25,7 +25,7 @@ impl Display for GameState {
         f.write_str(match *self {
             GameState::InProgress => "In Progress",
             GameState::PlayerLost => "Dealer Won",
-            GameState::PlayerWon => "Player Won"
+            GameState::PlayerWon => "Player Won",
         })
     }
 }
@@ -214,15 +214,15 @@ impl BlackJack {
         }
 
         Ok(Self {
-            player_id: player_id,
-            player: player,
-            dealer: dealer,
+            player_id,
+            player,
+            dealer,
             deck: new_deck,
             bet: new_bet,
             first_turn: true,
             player_stay_status: false,
             dealer_stay_status: false,
-            db_pool: db_pool,
+            db_pool,
             claimed: false,
             gain: 0i64,
         })
@@ -305,7 +305,8 @@ impl BlackJack {
         match self.status() {
             GameState::InProgress => if !self.player_stay_status {
                 self.first_turn = false;
-                Ok(self.player.add_card(self.deck.draw()?))
+                self.player.add_card(self.deck.draw()?);
+                Ok(())
             } else {
                 Err(BlackJackError::PlayerAlreadyPressedStay)
             },
@@ -328,7 +329,8 @@ impl BlackJack {
         self.first_turn = false;
         match self.status() {
             GameState::InProgress => if !self.dealer_stay_status {
-                Ok(self.dealer.add_card(self.deck.draw()?))
+                self.dealer.add_card(self.deck.draw()?);
+                Ok(())
             } else {
                 Err(BlackJackError::DealerAlreadyPressedStay)
             },
@@ -416,7 +418,7 @@ impl BlackJack {
 
         let sess = Session {
             id: self.player_id as i64,
-            bet: bet,
+            bet,
             dealer_hand: self.dealer.export().1,
             dealer_stay: self.dealer_stay_status,
             deck: self.deck.export(),

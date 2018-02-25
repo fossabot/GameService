@@ -2,7 +2,7 @@ use super::StandardCard::*;
 use super::StandardCard;
 use super::StandardCardFace::*;
 
-/// Deck of Cards used in BlacJack
+/// Deck of Cards used in Black Jack
 pub const STANDARD_DECK_OF_CARDS: [StandardCard; 52] = [
     Hearts(Ace),
     Hearts(Two),
