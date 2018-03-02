@@ -19,6 +19,7 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use(Serialize, Deserialize)]
 extern crate serde_derive;
+extern crate serde_json;
 
 extern crate dotenv;
 #[cfg(feature = "auto_save")]

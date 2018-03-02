@@ -7,6 +7,7 @@ pub mod blackjack;
 pub mod slot_machine;
 pub mod coin_toss;
 pub mod rps;
+pub mod rpg;
 // pub mod gofish;
 
 pub use self::deck::{StandardDeck, StandardDeckError};

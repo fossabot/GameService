@@ -11,3 +11,12 @@ table! {
         first_turn -> Bool,
     }
 }
+
+table! {
+    rpgplayer (id) {
+        id -> Int8,
+        exp -> Int8,
+        damage_recieved -> Int8,
+        gear -> Array<Text>,
+    }
+}

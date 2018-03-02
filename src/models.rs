@@ -1,4 +1,5 @@
 use schema::blackjack;
+use schema::rpgplayer;
 
 #[derive(Insertable, Queryable, Identifiable, AsChangeset)]
 #[table_name = "blackjack"]
@@ -22,4 +23,13 @@ pub struct BJSession {
     pub dealer_stay: bool,
     // True by default
     pub first_turn: bool,
+}
+
+#[derive(Insertable, Queryable, Identifiable, AsChangeset)]
+#[table_name = "rpgplayer"]
+pub struct RPGSession {
+    pub id: i64,
+    pub exp: i64,
+    pub damage_recieved: i64,
+    pub gear: Vec<String>,
 }
