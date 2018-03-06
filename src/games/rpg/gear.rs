@@ -3,7 +3,7 @@ use std::u8;
 use serde_json;
 use std::fmt;
 use super::errors::{GearParseError, GearTypeParseError};
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum GearType {
     Weapon,
     ArmorHead,
@@ -14,7 +14,6 @@ pub enum GearType {
     AccessoriesHead,
     AccessoriesGloves,
     AccessoriesNeck,
-    None,
 }
 
 impl FromStr for GearType {
@@ -32,7 +31,6 @@ impl FromStr for GearType {
             "accessories_wrist" => AccessoriesWrist,
             "accessories_gloves" => AccessoriesGloves,
             "accessories_neck" => AccessoriesNeck,
-            "None" => None,
             _ => return Err(GearTypeParseError::InvalidType),
         })
     }
@@ -40,54 +38,60 @@ impl FromStr for GearType {
 
 /// Gear
 /// Curesed items will have some negative stats
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Gear {
     pub gear_type: GearType,
     /// Name of gear
     pub name: String,
     pub enchant: u8,
-    pub _is_boss: bool,
-    pub _accuracy: i64,
-    pub _evasion: i64,
-    pub _health: i64,
-    pub _attack: i64,
-    pub _defense: i64,
+    pub is_boss: bool,
+    pub accuracy: i64,
+    pub evasion: i64,
+    pub health: i64,
+    pub attack: i64,
+    pub defense: i64,
 }
 
 impl Gear {
     fn multipliyer(&self) -> f64 {
-        if self._is_boss {
+        if self.is_boss {
             f64::from(self.enchant) / 50f64
         } else {
             f64::from(self.enchant) / 100f64
         }
     }
-    pub fn enchant_lvl(&self) -> u8 {
-        self.enchant
-    }
+
+    /// Increase to enchantment (Called by `Enchanter`)
     pub fn increase_enchant(&mut self, amount: u8) {
         if self.enchant != u8::MAX {
             self.enchant = self.enchant.checked_add(amount).unwrap_or(u8::MAX);
         }
     }
+    /// Decrease enchantment (Called by `Enchanter`)
     pub fn decrease_enchant(&mut self, amount: u8) {
         self.enchant = self.enchant.checked_sub(amount).unwrap_or(u8::MIN)
     }
+    /// Adjusts the `accuracy` stat by enchantment lvl and returns it
     pub fn accuracy(&self) -> i64 {
-        (self._accuracy as f64 * self.multipliyer()) as i64
+        (self.accuracy as f64 * self.multipliyer()) as i64
     }
+    /// Adjusts the `evasion`  by enchantment lvl and returns it
     pub fn evasion(&self) -> i64 {
-        (self._evasion as f64 * self.multipliyer()) as i64
+        (self.evasion as f64 * self.multipliyer()) as i64
     }
+    /// Adjusts the `health` by enchantment lvl and returns it
     pub fn health(&self) -> i64 {
-        (self._health as f64 * self.multipliyer()) as i64
+        (self.health as f64 * self.multipliyer()) as i64
     }
+    /// Adjusts the `attack` by enchantment lvl and returns it
     pub fn attack(&self) -> i64 {
-        (self._attack as f64 * self.multipliyer()) as i64
+        (self.attack as f64 * self.multipliyer()) as i64
     }
+    /// Adjusts the `defense` by enchantment lvl and returns it
     pub fn defense(&self) -> i64 {
-        (self._defense as f64 * self.multipliyer()) as i64
+        (self.defense as f64 * self.multipliyer()) as i64
     }
+    /// The name of the gear
     pub fn name(&self) -> &str {
         &self.name
     }

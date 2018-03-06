@@ -29,6 +29,7 @@ impl StdError for GearTypeParseError {
         }
     }
 }
+
 #[derive(Debug)]
 pub enum GearParseError {
     JsonError(SerdeJsonError),
@@ -63,6 +64,7 @@ pub enum PlayerError {
     R2d2(R2d2Error),
     GearError(GearParseError),
 }
+
 impl fmt::Display for PlayerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(self.description())
@@ -81,18 +83,21 @@ impl StdError for PlayerError {
         }
     }
 }
+
 #[cfg(feature = "auto_save")]
 impl From<DieselResultError> for PlayerError {
     fn from(error: DieselResultError) -> PlayerError {
         PlayerError::DieselResult(error)
     }
 }
+
 #[cfg(feature = "auto_save")]
 impl From<R2d2Error> for PlayerError {
     fn from(error: R2d2Error) -> PlayerError {
         PlayerError::R2d2(error)
     }
 }
+
 impl From<GearParseError> for PlayerError {
     fn from(error: GearParseError) -> PlayerError {
         PlayerError::GearError(error)
@@ -107,6 +112,7 @@ pub enum EnchantError {
     MaxCurses,
     NotHighEnoughEnchantment(u16),
 }
+
 impl fmt::Display for EnchantError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(self.description())
@@ -127,6 +133,7 @@ impl StdError for EnchantError {
         }
     }
 }
+
 #[derive(Debug)]
 pub enum ShopError {
     NotEnoughFunds(u64),
@@ -152,5 +159,47 @@ impl StdError for ShopError {
 impl From<EnchantError> for ShopError {
     fn from(err: EnchantError) -> ShopError {
         ShopError::EnchantmentError(err)
+    }
+}
+
+#[derive(Debug)]
+pub enum GameError {
+    Shop(ShopError),
+    Enchant(EnchantError),
+    Player(PlayerError),
+}
+
+impl fmt::Display for GameError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.description())
+    }
+}
+
+impl StdError for GameError {
+    fn description(&self) -> &str {
+        use self::GameError::*;
+        match *self {
+            Shop(ref err) => err.description(),
+            Enchant(ref err) => err.description(),
+            Player(ref err) => err.description(),
+        }
+    }
+}
+
+impl From<ShopError> for GameError {
+    fn from(err: ShopError) -> GameError {
+        GameError::Shop(err)
+    }
+}
+
+impl From<EnchantError> for GameError {
+    fn from(err: EnchantError) -> GameError {
+        GameError::Enchant(err)
+    }
+}
+
+impl From<PlayerError> for GameError {
+    fn from(err: PlayerError) -> GameError {
+        GameError::Player(err)
     }
 }

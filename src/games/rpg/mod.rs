@@ -4,10 +4,14 @@ mod dungeon;
 mod monster;
 mod enchant;
 mod shop;
+mod game;
 pub mod errors;
 
-pub use self::shop::Shop;
-pub use self::gear::Gear;
+// TODO: Convert results to responses
+// TODO: mod response;
+
+use self::shop::Shop;
+use self::gear::Gear;
 pub use self::player::Player;
-pub use self::dungeon::Dungeon;
-pub use self::monster::Monster;
+use self::dungeon::Dungeon;
+pub use self::game::Game;

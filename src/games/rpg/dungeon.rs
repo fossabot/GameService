@@ -90,7 +90,7 @@ impl Dungeon {
 
         (dungeon.balance, dungeon.log.join("\n"), dungeon.player)
     }
-    // Returns a random Potion effect heal/poison
+    /// Returns a random Potion effect heal/poison
     pub fn buy_potion(&mut self) {
         let price = 200 * (self.current_floor / 5) + 30;
         if self.balance < price {
@@ -115,6 +115,7 @@ impl Dungeon {
             effect
         };
     }
+    /// Spawns a random monster, stats scaling to the floor
     pub fn spawn_monster(floor: u64) -> Monster {
         Monster::new(
             *rand::thread_rng()
@@ -123,6 +124,7 @@ impl Dungeon {
             floor,
         )
     }
+    /// Code for executing a floor
     fn do_a_floor(&mut self) {
         if !self.player.is_alive() {
             return;
@@ -188,6 +190,15 @@ impl Dungeon {
                 }
             }
             self.current_floor += 1;
+            let loot = monster.loot();
+            match loot {
+                Some(amount) => {
+                    self.balance += amount;
+                    self.log
+                        .push(format!("Gained {} balance is now {}", amount, self.balance));
+                }
+                None => self.log.push(String::from("No loot dropped")),
+            }
         }
     }
 }

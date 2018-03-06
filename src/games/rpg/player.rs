@@ -6,6 +6,8 @@ use diesel;
 #[cfg(feature = "auto_save")]
 use ConnectionPool;
 use super::errors::PlayerError;
+
+#[derive(Clone)]
 pub struct Player {
     #[cfg(feature = "auto_save")]
     id: u64,
@@ -13,7 +15,9 @@ pub struct Player {
     pub damage_recieved: i64,
     pub gear: Vec<Gear>,
     #[cfg(feature = "auto_save")]
-    db_pool: ConnectionPool,
+    conn_pool: ConnectionPool,
+    #[cfg(feature = "auto_save")]
+    save: bool,
 }
 
 impl Player {
@@ -51,7 +55,8 @@ impl Player {
             exp: sess.exp as u64,
             damage_recieved: sess.damage_recieved,
             gear: c![g.parse()?, for g in sess.gear],
-            db_pool: pool.clone(),
+            conn_pool: pool.clone(),
+            save: true,
         })
     }
     #[cfg(not(feature = "auto_save"))]
@@ -135,7 +140,7 @@ impl Player {
     #[cfg(feature = "auto_save")]
     pub fn save(&self) -> Result<(), PlayerError> {
         use models::RPGSession;
-        let conn = self.db_pool.get()?;
+        let conn = self.conn_pool.get()?;
         let sess = RPGSession {
             id: self.id as i64,
             gear: c![g.to_string(), for g in &self.gear],
@@ -144,16 +149,5 @@ impl Player {
         };
         sess.save_changes::<RPGSession>(&*conn)?;
         Ok(())
-    }
-    #[cfg(not(feature = "auto_save"))]
-    pub fn save(&self) -> Result<(), PlayerError> {
-        unimplemented!()
-    }
-}
-
-#[cfg(feature = "auto_save")]
-impl Drop for Player {
-    fn drop(&mut self) {
-        self.save().expect("Failed to save");
     }
 }
