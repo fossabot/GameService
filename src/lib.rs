@@ -1,5 +1,7 @@
 #![recursion_limit = "128"]
 #![feature(custom_derive, test, const_fn, custom_attribute)]
+#![cfg_attr(test, feature(plugin))]
+#![cfg_attr(test, plugin(clippy))]
 
 #[macro_use]
 extern crate cfg_if;
@@ -30,9 +32,9 @@ extern crate rand;
 extern crate regex;
 
 #[cfg(feature = "auto_save")]
-pub use diesel::prelude::*;
-#[cfg(feature = "auto_save")]
 pub use diesel::pg::PgConnection;
+#[cfg(feature = "auto_save")]
+pub use diesel::prelude::*;
 #[cfg(feature = "auto_save")]
 use dotenv::dotenv;
 #[cfg(feature = "auto_save")]

@@ -57,7 +57,7 @@ impl Monster {
         }
     }
     fn adjust_stats(floor: u64, base: u64) -> u64 {
-        base + base * (floor / 3)
+        base + (base as f64 * (floor as f64 / 3f64)) as u64
     }
 
     // Coins
@@ -82,4 +82,28 @@ impl Monster {
             ))
         }
     }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn loot() {
+        panic!("Not Written!")
+    }
+
+    #[test]
+    fn recieve_damage() {
+        panic!("Not Written!")
+    }
+
+    #[test]
+    fn adjust_stats() {
+        panic!("Not Written!")
+    }
+
+    #[test]
+    fn is_alive() {
+        panic!("Not Written!")
+    }
+
 }

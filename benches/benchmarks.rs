@@ -5,8 +5,8 @@ extern crate test;
 
 #[cfg(feature = "auto_save")]
 mod blackjack {
-    use games_microservice::games::blackjack::BlackJack;
     use games_microservice::establish_connection_pool;
+    use games_microservice::games::blackjack::BlackJack;
     use test::Bencher;
 
     #[bench]
@@ -40,8 +40,8 @@ mod blackjack {
 
 #[cfg(not(feature = "auto_save"))]
 mod blackjack {
-    use test::Bencher;
     use games_microservice::games::blackjack::BlackJack;
+    use test::Bencher;
 
     #[bench]
     fn bench_mark(b: &mut Bencher) {
@@ -57,8 +57,8 @@ mod blackjack {
 }
 
 mod coin_toss {
-    use test::Bencher;
     use games_microservice::games::coin_toss::guess_side;
+    use test::Bencher;
 
     #[bench]
     fn bench_coin(bench: &mut Bencher) {
@@ -67,8 +67,8 @@ mod coin_toss {
 }
 
 mod rps_game {
-    use test::Bencher;
     use games_microservice::games::rps::rps;
+    use test::Bencher;
 
     #[bench]
     fn bench_rps(b: &mut Bencher) {

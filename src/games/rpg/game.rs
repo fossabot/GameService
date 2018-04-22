@@ -1,5 +1,5 @@
-use super::{Dungeon, Gear, Player, Shop};
 use super::errors::GameError;
+use super::{Dungeon, Gear, Player, Shop};
 #[cfg(feature = "auto_save")]
 use ConnectionPool;
 
@@ -18,7 +18,11 @@ impl Game {
 
     /// Fetch the player from the database and create a new game session
     #[cfg(feature = "auto_save")]
-    pub fn new(player_id: u64, conn_pool: &ConnectionPool, funds: u64) -> Result<Self, GameError> {
+    pub fn new(
+        player_id: Option<u64>,
+        conn_pool: Option<&ConnectionPool>,
+        funds: u64,
+    ) -> Result<Self, GameError> {
         Ok(Self {
             player: Player::get(player_id, conn_pool)?,
             funds,
@@ -55,11 +59,10 @@ impl Game {
     pub fn enchant_gear(&mut self, gear: usize) -> String {
         self.player.gear.sort();
         let mut gear = self.player.gear.remove(gear);
-        match Shop::enchant_gear(&mut gear, self.funds) {
-            Ok((gear, funds, success)) => {
+        match Shop::enchant_gear(&mut gear, &mut self.funds) {
+            Ok(success) => {
                 self.player.gear.push(gear.clone());
                 self.player.gear.sort();
-                self.funds = funds;
                 let msg = if success {
                     format!("Successfully enchanted {}!", gear)
                 } else {
@@ -87,10 +90,9 @@ impl Game {
     pub fn curse_gear(&mut self, gear: usize) -> String {
         self.player.gear.sort();
         let mut g = self.player.gear.remove(gear);
-        let msg = match Shop::curse_gear(&mut g, self.funds) {
-            Ok((gear, funds)) => {
-                self.funds = funds;
-                self.player.gear.push(gear);
+        let msg = match Shop::curse_gear(&mut g, &mut self.funds) {
+            Ok(_) => {
+                self.player.gear.push(g.clone());
                 format!("Successfully cursed {}!", g)
             }
             Err(why) => {
@@ -106,10 +108,9 @@ impl Game {
     /// Reroll gear stats
     pub fn reroll_gear(&mut self, gear: usize) -> String {
         let mut g = self.player.gear.remove(gear);
-        let msg = match Shop::reroll_gear(&mut g, self.funds) {
-            Ok((gear, funds)) => {
-                self.funds = funds;
-                self.player.gear.push(gear);
+        let msg = match Shop::reroll_gear(&mut g, &mut self.funds) {
+            Ok(_) => {
+                self.player.gear.push(g.clone());
                 format!("Successfully re-rolled {}", g)
             }
             Err(why) => {

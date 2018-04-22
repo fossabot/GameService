@@ -1,12 +1,12 @@
-use std::char::ParseCharError;
-use std::error::Error as StdError;
-use std::fmt;
 #[cfg(feature = "auto_save")]
 use diesel::result::Error as DieselResultError;
 #[cfg(feature = "auto_save")]
 use r2d2::Error as R2d2Error;
-use std::convert::From;
 use serde_json::Error as SerdeJsonError;
+use std::char::ParseCharError;
+use std::convert::From;
+use std::error::Error as StdError;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum GearTypeParseError {
@@ -63,6 +63,12 @@ pub enum PlayerError {
     #[cfg(feature = "auto_save")]
     R2d2(R2d2Error),
     GearError(GearParseError),
+    #[cfg(feature = "auto_save")]
+    NoConnectionPool,
+    #[cfg(feature = "auto_save")]
+    NoID,
+    #[cfg(feature = "auto_save")]
+    DoNotSaveConfig,
 }
 
 impl fmt::Display for PlayerError {
@@ -80,6 +86,12 @@ impl StdError for PlayerError {
             #[cfg(feature = "auto_save")]
             DieselResult(ref err) => err.description(),
             GearError(ref err) => err.description(),
+            #[cfg(feature = "auto_save")]
+            NoConnectionPool => "There is no associated connection pool",
+            #[cfg(feature = "auto_save")]
+            NoID => "There is no associated ID",
+            #[cfg(feature = "auto_save")]
+            DoNotSaveConfig => "You attempted to save when Save is set to false",
         }
     }
 }

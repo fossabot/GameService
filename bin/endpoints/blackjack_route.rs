@@ -1,5 +1,5 @@
-use games::blackjack::{BlackJack, Response, SessionCount};
 use diesel::prelude::*;
+use games::blackjack::{BlackJack, Response, SessionCount};
 use rocket::State;
 use rocket_contrib::Json;
 use ConnectionPool;

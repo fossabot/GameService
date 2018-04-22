@@ -13,40 +13,42 @@ impl Shop {
         }
     }
     const REROLL_PRICE: u64 = 2_531_250;
-    const CURSE_PRISE: u64 = 5_248_800;
+    const CURSE_PRICE: u64 = 5_248_800;
 
     /// Enchant Gear for a price
-    pub fn enchant_gear(g: &mut Gear, funds: u64) -> Result<(Gear, u64, bool), ShopError> {
+    pub fn enchant_gear(g: &mut Gear, funds: &mut u64) -> Result<bool, ShopError> {
         // Enchantment Lvl
         let level = g.enchant;
         // Price to perform enchant
         let price = Shop::enchant_price(g)?;
-        if price > funds {
+        if price > *funds {
             Err(ShopError::NotEnoughFunds(price))
         } else {
-            let gear = Enchanter::enchant_gear(g)?;
+            *funds -= price;
+            Enchanter::enchant_gear(g)?;
             // Checks if enchantment lvl is greater than current lvl
-            let success = gear.enchant > level;
-            Ok((gear, funds - price, success))
+            Ok(g.enchant > level)
         }
     }
 
     /// Reroll a gear's lowest stat for a price
-    pub fn reroll_gear(g: &mut Gear, funds: u64) -> Result<(Gear, u64), ShopError> {
-        if Shop::REROLL_PRICE > funds {
+    pub fn reroll_gear(g: &mut Gear, funds: &mut u64) -> Result<(), ShopError> {
+        if Shop::REROLL_PRICE > *funds {
             return Err(ShopError::NotEnoughFunds(Shop::REROLL_PRICE));
         }
-        let gear = Enchanter::reroll_stats(g)?;
-        Ok((gear, funds - Shop::REROLL_PRICE))
+        Enchanter::reroll_stats(g)?;
+        *funds -= Shop::REROLL_PRICE;
+        Ok(())
     }
 
     // Curses a random stat on the gear for a price
-    pub fn curse_gear(g: &mut Gear, funds: u64) -> Result<(Gear, u64), ShopError> {
-        if Shop::CURSE_PRISE > funds {
-            return Err(ShopError::NotEnoughFunds(Shop::CURSE_PRISE));
+    pub fn curse_gear(g: &mut Gear, funds: &mut u64) -> Result<(), ShopError> {
+        if Shop::CURSE_PRICE > *funds {
+            return Err(ShopError::NotEnoughFunds(Shop::CURSE_PRICE));
         }
-        let gear = Enchanter::curse_gear(g)?;
-        Ok((gear, funds - Shop::CURSE_PRISE))
+        Enchanter::curse_gear(g)?;
+        *funds -= Shop::CURSE_PRICE;
+        Ok(())
     }
 
     /// Returns the odds of success as a precentage

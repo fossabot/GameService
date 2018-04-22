@@ -1,6 +1,6 @@
-use rand::{self, Rng};
-use super::Player;
 use super::monster::{Monster, MonsterType};
+use super::Player;
+use rand::{self, Rng};
 pub struct Dungeon {
     pub player: Player,
     pub current_floor: u64,
@@ -22,17 +22,15 @@ impl Dungeon {
         while current_floor % 5 != 0 {
             current_floor -= 1;
         }
-        let log = vec![
-            format!(
-                "Starting on floor {}, AutoBuy: {}, Starting Bal: {}",
-                floor, auto_buy, balance
-            ),
-        ];
+
         let mut dungeon = Dungeon {
             current_floor,
             balance,
             auto_buy,
-            log,
+            log: vec![format!(
+                "Starting on floor {}, AUtobuy: {}, Starting Bal: {}",
+                floor, auto_buy, balance
+            )],
             gain_exp: floor >= player.level() / 10,
             player,
         };
@@ -47,49 +45,68 @@ impl Dungeon {
                     .log
                     .push(String::from("Because you are lvl 10 or below res was free"));
             } else {
-                let priest_bill = dungeon.player.level() * 10;
-                dungeon.log.push(format!(
-                    "Priest bill is {} for resurecting you",
-                    priest_bill
-                ));
-                if dungeon.balance < priest_bill {
-                    let mut rng = rand::thread_rng();
-                    let mut gear_degraded = false;
-                    let mut degrade_log: Vec<String> = vec![];
-                    dungeon
-                        .log
-                        .push(String::from("You were unable to pay the bill"));
-                    dungeon.player.gear = dungeon
-                        .player
-                        .gear
-                        .iter_mut()
-                        .map(|g| {
-                            if rng.gen_weighted_bool(100) {
-                                gear_degraded = true;
-                                g.decrease_enchant(1);
-                                degrade_log.push(format!(
-                                    "The priest degraded {} as compensation",
-                                    g.name()
-                                ));
-                            }
-                            g.clone()
-                        })
-                        .collect();
-                    if !gear_degraded {
-                        dungeon
-                            .log
-                            .push(String::from("The graicious priest dismissed the bill"));
-                    } else {
-                        for entry in &degrade_log {
-                            dungeon.log.push(entry.to_string())
-                        }
-                    }
-                }
+                dungeon.resurect();
             }
         }
 
         (dungeon.balance, dungeon.log.join("\n"), dungeon.player)
     }
+
+    /// A Function to handle when the play was unable to handle the bull
+    fn resurect_cant_afford_bill(&mut self) {
+        self.log.push(String::from(
+            "The priest was unable to find enough to pay the bill",
+        ));
+        let mut rng = rand::thread_rng();
+        let gear = self.player.gear.clone();
+        let mut gear_degraded = false;
+        self.player.gear = gear.into_iter()
+            .map(|mut g| {
+                if g.enchant > 1 && rng.gen_weighted_bool(100) {
+                    gear_degraded = true;
+                    g.decrease_enchant(1);
+                    self.log
+                        .push(format!("The priest took an enchantment lvl of {}", g));
+                }
+                g
+            })
+            .collect();
+        if !gear_degraded {
+            self.log.push(String::from(
+                "The merciful priest did not demand compensation",
+            ));
+        }
+    }
+
+    /// Handles the resurection of the player in the event of death
+    fn resurect(&mut self) {
+        if self.player.is_alive() {
+            return;
+        }
+        if self.player.level() <= 10 {
+            self.log.push(String::from(
+                "Because you are lvl 10 or below your resurect was free and without cost",
+            ));
+            return;
+        }
+        let bill = self.player.level().pow(2) * 10;
+        self.log.push(format!(
+            "The priest searches your body to see if you can afford the resurection bill of {}",
+            bill
+        ));
+        if self.balance > bill {
+            self.resurect_cant_afford_bill();
+        } else {
+            self.balance -= bill;
+            self.log.push(format!(
+                "The priest took {} from you. Your new balance is: {}",
+                bill, self.balance
+            ));
+        }
+        self.player.exp = self.player.exp.checked_sub(100).unwrap_or(0);
+        self.log.push(String::from("You lost 100 exp"));
+    }
+
     /// Returns a random Potion effect heal/poison
     pub fn buy_potion(&mut self) {
         let price = 200 * (self.current_floor / 5) + 30;

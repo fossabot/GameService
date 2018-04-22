@@ -1,5 +1,9 @@
 #![plugin(rocket_codegen)]
 #![feature(custom_derive, plugin, test)]
+#![cfg_attr(test, feature(plugin))]
+#![cfg_attr(test, plugin(clippy))]
+#![cfg_attr(test, allow(print_literal))]
+#![cfg_attr(test, allow(needless_pass_by_value))]
 
 extern crate diesel;
 extern crate games_microservice;

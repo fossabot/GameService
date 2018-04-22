@@ -1,13 +1,13 @@
 extern crate serde_json;
 extern crate test;
 
-use games::blackjack::Response;
+use self::test::Bencher;
 use endpoints::router;
+use establish_connection_pool;
+use games::blackjack::Response;
 use rocket;
 use rocket::local::Client;
 use serde_json::Value;
-use self::test::Bencher;
-use establish_connection_pool;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ActiveSessionsCount {
@@ -112,10 +112,7 @@ fn test_blackjack_routes() {
         let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
         let status = resp.status.unwrap();
-        let mut expected_gain = -1;
-        if status.game_state.unwrap() {
-            expected_gain = 1;
-        }
+        let expected_gain = if status.game_state.unwrap() { 1 } else { -1 };
         let mut resp = client.post("/blackjack/0/claim").dispatch();
         let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         let status_code: u16 = resp.status_code as u16;

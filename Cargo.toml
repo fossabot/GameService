@@ -18,20 +18,20 @@ dotenv = "0.11.0"
 lazy_static = "1.0.0"
 log = "0.4.1"
 rand = "0.4.2"
-regex = "0.2.6"
-serde = "1.0.27"
-serde_derive = "1.0.27"
-serde_json = "1.0.10"
+regex = "0.2.10"
+serde = "1.0.42"
+serde_derive = "1.0.42"
+serde_json = "1.0.16"
 
 [dependencies.diesel]
 features = ["postgres"]
 optional = true
-version = "1.1.1"
+version = "1.2.2"
 
 [dependencies.diesel_migrations]
 features = ["postgres"]
 optional = true
-version = "1.1.0"
+version = "1.2.0"
 
 [dependencies.r2d2]
 optional = true
@@ -43,17 +43,17 @@ version = "1.0.0"
 
 [dependencies.rocket]
 optional = true
-version = "0.3.6"
+version = "0.3.8"
 
 [dependencies.rocket_codegen]
 optional = true
-version = "0.3.6"
+version = "0.3.8"
 
 [dependencies.rocket_contrib]
 default-features = false
 features = ["json"]
 optional = true
-version = "0.3.6"
+version = "0.3.8"
 
 [features]
 auto_save = [
@@ -71,3 +71,6 @@ web = [
     "rocket_codegen",
     "rocket_contrib",
 ]
+
+[dev-dependencies]
+clippy = "0.0.195"

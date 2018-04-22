@@ -1,16 +1,16 @@
 #[cfg(feature = "auto_save")]
 use super::Session;
+use super::{CardParseError, Deck, DeckError, Hand};
+#[cfg(feature = "auto_save")]
+use diesel;
 #[cfg(feature = "auto_save")]
 use diesel::prelude::*;
 #[cfg(feature = "auto_save")]
 use diesel::result::Error as DieselResultError;
 #[cfg(feature = "auto_save")]
-use diesel;
-#[cfg(feature = "auto_save")]
 use r2d2::Error as R2d2Error;
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use super::{CardParseError, Deck, DeckError, Hand};
 #[cfg(feature = "auto_save")]
 use ConnectionPool;
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
@@ -163,8 +163,8 @@ impl BlackJack {
         new_bet: u64,
         db_pool: ConnectionPool,
     ) -> Result<Self, BlackJackError> {
-        use schema::blackjack::dsl::*;
         use schema::blackjack as blackjack_schema;
+        use schema::blackjack::dsl::*;
 
         // TODO: Make this safer (low)
         let conn = db_pool.get().unwrap();

@@ -1,8 +1,8 @@
 use rocket::Rocket;
 mod blackjack_route;
-mod slot_machine;
 mod coin_toss;
 mod rps;
+mod slot_machine;
 
 pub fn router(rocket: Rocket) -> Rocket {
     rocket

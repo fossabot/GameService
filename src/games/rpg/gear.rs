@@ -1,8 +1,8 @@
-use std::str::FromStr;
-use std::u8;
+use super::errors::{GearParseError, GearTypeParseError};
 use serde_json;
 use std::fmt;
-use super::errors::{GearParseError, GearTypeParseError};
+use std::str::FromStr;
+use std::u8;
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum GearType {
     Weapon,
@@ -73,23 +73,23 @@ impl Gear {
     }
     /// Adjusts the `accuracy` stat by enchantment lvl and returns it
     pub fn accuracy(&self) -> i64 {
-        (self.accuracy as f64 * self.multipliyer()) as i64
+        self.accuracy + (self.accuracy as f64 * self.multipliyer()) as i64
     }
     /// Adjusts the `evasion`  by enchantment lvl and returns it
     pub fn evasion(&self) -> i64 {
-        (self.evasion as f64 * self.multipliyer()) as i64
+        self.evasion + (self.evasion as f64 * self.multipliyer()) as i64
     }
     /// Adjusts the `health` by enchantment lvl and returns it
     pub fn health(&self) -> i64 {
-        (self.health as f64 * self.multipliyer()) as i64
+        self.health + (self.health as f64 * self.multipliyer()) as i64
     }
     /// Adjusts the `attack` by enchantment lvl and returns it
     pub fn attack(&self) -> i64 {
-        (self.attack as f64 * self.multipliyer()) as i64
+        self.attack + (self.attack as f64 * self.multipliyer()) as i64
     }
     /// Adjusts the `defense` by enchantment lvl and returns it
     pub fn defense(&self) -> i64 {
-        (self.defense as f64 * self.multipliyer()) as i64
+        self.defense + (self.defense as f64 * self.multipliyer()) as i64
     }
     /// The name of the gear
     pub fn name(&self) -> &str {
@@ -112,4 +112,77 @@ impl FromStr for Gear {
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         Ok(serde_json::from_str(s)?)
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Gear, GearType};
+    fn test_gear() -> Gear {
+        Gear {
+            attack: 1,
+            accuracy: 1,
+            defense: 1,
+            enchant: 1,
+            evasion: 1,
+            gear_type: GearType::Weapon,
+            health: 1,
+            is_boss: false,
+            name: String::from("Stick of justice"),
+        }
+    }
+
+    #[test]
+    fn increase_enchant() {
+        let mut gear = test_gear();
+        let enchant = gear.enchant;
+        // Increase Enchantment by 1
+        gear.increase_enchant(1);
+        // Enchantment should be 2
+        assert_eq!(gear.enchant, enchant + 1);
+        // Increase Enchantment to Max + 2
+        gear.increase_enchant(255);
+        // Enchantment Should be Max (and not error)
+        assert_eq!(gear.enchant, 255);
+    }
+
+    #[test]
+    fn decrease_enchant() {
+        let mut gear = test_gear();
+        assert_eq!(gear.enchant, 1);
+        gear.decrease_enchant(1);
+        assert_eq!(gear.enchant, 0);
+        gear.decrease_enchant(255);
+        // Make sure it wont Go past 0 / Error
+        assert_eq!(gear.enchant, 0);
+    }
+
+    #[test]
+    fn multipliyer() {
+        let mut gear = test_gear();
+        gear.enchant = 0;
+        // Test gear.multipliyer()
+        gear.enchant = 1;
+        // Test gear.multipliyer()
+        gear.is_boss = true;
+        // Test gear.multipliyer()
+
+        gear.enchant = 10;
+        gear.accuracy = 100;
+        gear.health = 100;
+        gear.attack = 100;
+        gear.defense = 100;
+        gear.evasion = 100;
+        gear.is_boss = false;
+
+        // Test new gear.accuracy()
+        // Test new gear.health()
+        // Test new gear.attack()
+        // Test new gear.defense()
+        // Test new gear.evasion()
+
+        gear.is_boss = true;
+        // Test new gear.evasion()
+        panic!("Gear Multiplyer Values arent ready!")
+    }
+
 }

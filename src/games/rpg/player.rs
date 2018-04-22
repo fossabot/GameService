@@ -1,21 +1,22 @@
-use super::Gear;
 #[cfg(feature = "auto_save")]
-use diesel::prelude::*;
+use super::errors::PlayerError;
+use super::Gear;
 #[cfg(feature = "auto_save")]
 use diesel;
 #[cfg(feature = "auto_save")]
+use diesel::prelude::*;
+#[cfg(feature = "auto_save")]
 use ConnectionPool;
-use super::errors::PlayerError;
 
 #[derive(Clone)]
 pub struct Player {
     #[cfg(feature = "auto_save")]
-    id: u64,
+    id: Option<u64>,
     pub exp: u64,
     pub damage_recieved: i64,
     pub gear: Vec<Gear>,
     #[cfg(feature = "auto_save")]
-    conn_pool: ConnectionPool,
+    conn_pool: Option<ConnectionPool>,
     #[cfg(feature = "auto_save")]
     save: bool,
 }
@@ -27,10 +28,24 @@ impl Player {
     const EVASION: i64 = 1;
     const ACCURACY: i64 = 5;
     #[cfg(feature = "auto_save")]
-    pub fn get(player_id: u64, pool: &ConnectionPool) -> Result<Self, PlayerError> {
-        use schema::rpgplayer::dsl::*;
-        use schema::rpgplayer as rpgplayer_schema;
+    pub fn get(player_id: Option<u64>, pool: Option<&ConnectionPool>) -> Result<Self, PlayerError> {
+        if player_id.is_none() || pool.is_none() {
+            return Ok(Self {
+                id: None,
+                exp: 0,
+                damage_recieved: 0,
+                gear: vec![],
+                conn_pool: None,
+                save: false,
+            });
+        };
+        // None should be unreachable
+        let player_id = player_id.unwrap();
+        let pool = pool.unwrap();
+
         use models::RPGSession;
+        use schema::rpgplayer as rpgplayer_schema;
+        use schema::rpgplayer::dsl::*;
         let conn = pool.get()?;
         let mut results = rpgplayer
             .filter(id.eq(player_id as i64))
@@ -51,11 +66,11 @@ impl Player {
             sess
         };
         Ok(Self {
-            id: sess.id as u64,
+            id: Some(sess.id as u64),
             exp: sess.exp as u64,
             damage_recieved: sess.damage_recieved,
             gear: c![g.parse()?, for g in sess.gear],
-            conn_pool: pool.clone(),
+            conn_pool: Some(pool.clone()),
             save: true,
         })
     }
@@ -74,7 +89,7 @@ impl Player {
         self.level() as f64 / 80f64
     }
     fn base_health(&self) -> u64 {
-        (Self::HEALTH as f64 * self.multiplyer()) as u64
+        Self::HEALTH + (Self::HEALTH as f64 * self.multiplyer()) as u64
     }
     pub fn current_health(&self) -> u64 {
         let health: i64 = self.gear
@@ -89,25 +104,25 @@ impl Player {
         }
     }
     pub fn accuracy(&self) -> i64 {
-        let base = (Self::ACCURACY as f64 * self.multiplyer()) as i64;
+        let base = Self::ACCURACY + (Self::ACCURACY as f64 * self.multiplyer()) as i64;
         self.gear
             .iter()
             .fold(base, |base, gear| base + gear.accuracy())
     }
     pub fn evasaion(&self) -> i64 {
-        let base = (Self::EVASION as f64 * self.multiplyer()) as i64;
+        let base = Self::EVASION + (Self::EVASION as f64 * self.multiplyer()) as i64;
         self.gear
             .iter()
             .fold(base, |base, gear| base + gear.evasion())
     }
     pub fn attack(&self) -> i64 {
-        let base = (Self::ATTACK as f64 * self.multiplyer()) as i64;
+        let base = Self::ATTACK + (Self::ATTACK as f64 * self.multiplyer()) as i64;
         self.gear
             .iter()
             .fold(base, |base, gear| gear.attack() + base)
     }
     pub fn defense(&self) -> i64 {
-        let base = (Self::DEFENSE as f64 * self.multiplyer()) as i64;
+        let base = Self::DEFENSE + (Self::DEFENSE as f64 * self.multiplyer()) as i64;
         self.gear
             .iter()
             .fold(base, |base, gear| base + gear.defense()) as i64
@@ -140,14 +155,81 @@ impl Player {
     #[cfg(feature = "auto_save")]
     pub fn save(&self) -> Result<(), PlayerError> {
         use models::RPGSession;
-        let conn = self.conn_pool.get()?;
-        let sess = RPGSession {
-            id: self.id as i64,
-            gear: c![g.to_string(), for g in &self.gear],
-            damage_recieved: self.damage_recieved,
-            exp: self.exp as i64,
-        };
-        sess.save_changes::<RPGSession>(&*conn)?;
-        Ok(())
+        match self.conn_pool {
+            Some(ref pool) => {
+                let conn = pool.get()?;
+                match self.id {
+                    Some(id) => {
+                        if !self.save {
+                            return Err(PlayerError::DoNotSaveConfig);
+                        }
+                        let sess = RPGSession {
+                            id: id as i64,
+                            gear: c![g.to_string(), for g in &self.gear],
+                            damage_recieved: self.damage_recieved,
+                            exp: self.exp as i64,
+                        };
+                        sess.save_changes::<RPGSession>(&*conn)?;
+                        Ok(())
+                    }
+                    None => Err(PlayerError::NoID),
+                }
+            }
+            None => Err(PlayerError::NoConnectionPool),
+        }
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::super::gear::{Gear, GearType};
+    use super::Player;
+
+    // Creates A player (Not touching the DB)
+    #[cfg(feature = "auto_save")]
+    fn get_player() -> Player {
+        // There is no reason for this to fail...
+        Player::get(None, None).unwrap()
+    }
+
+    // Creates a player (Not touching the DB)
+    #[cfg(not(feature = "auto_save"))]
+    fn get_player() -> Player {
+        Player::get()
+    }
+
+    // Test recieve_damage reduces the damage recieved
+    #[test]
+    fn recieve_damage() {
+        #[allow(unused_mut)]
+        let mut player = get_player();
+        assert_eq!(player.current_health(), Player::HEALTH);
+        panic!("Damage calculation isnt completed")
+    }
+
+    // Test Do Attack returns a number >= 0
+    #[test]
+    fn do_attack() {
+        let mut player = get_player();
+        let gear = Gear {
+            accuracy: 0,
+            attack: -200,
+            defense: 0,
+            enchant: 0,
+            evasion: 0,
+            name: String::new(),
+            gear_type: GearType::Weapon,
+            health: 0,
+            is_boss: false,
+        };
+        player.gear.push(gear);
+        panic!("Attack damage isnt completed");
+    }
+
+    // Test Stat changes by gear
+    #[test]
+    fn gear_modifers() {
+        panic!("No written yet!")
+    }
+
 }

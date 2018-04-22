@@ -1,9 +1,11 @@
 use regex::Regex;
 use std::char::ParseCharError;
+use std::convert::From;
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::str::FromStr;
-use std::convert::From;
+
+/// Standard Card Face (BlackJack)
 #[derive(Clone, Debug, Copy)]
 pub enum StandardCardFace {
     Ace,
@@ -45,6 +47,7 @@ impl Display for StandardCardFace {
     }
 }
 
+/// Standard Card (BlackJack)
 #[derive(Debug, Clone, Copy)]
 pub enum StandardCard {
     Hearts(StandardCardFace),
@@ -75,7 +78,7 @@ impl FromStr for StandardCard {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let txt = s.to_uppercase();
         use self::StandardCard::*;
-        lazy_static!{
+        lazy_static! {
             static ref RE: Regex = Regex::new(r"(.*):(.*)").unwrap();
         }
 
@@ -198,5 +201,143 @@ impl From<StandardCard> for u8 {
 impl From<StandardCard> for u64 {
     fn from(card: StandardCard) -> u64 {
         u64::from(u8::from(card))
+    }
+}
+
+/// A Standard Deck Of Cards
+pub const STANDARD_DECK_OF_CARDS: [StandardCard; 56] = [
+    StandardCard::Hearts(StandardCardFace::Ace),
+    StandardCard::Hearts(StandardCardFace::Two),
+    StandardCard::Hearts(StandardCardFace::Three),
+    StandardCard::Hearts(StandardCardFace::Four),
+    StandardCard::Hearts(StandardCardFace::Five),
+    StandardCard::Hearts(StandardCardFace::Six),
+    StandardCard::Hearts(StandardCardFace::Seven),
+    StandardCard::Hearts(StandardCardFace::Eight),
+    StandardCard::Hearts(StandardCardFace::Nine),
+    StandardCard::Hearts(StandardCardFace::Ten),
+    StandardCard::Hearts(StandardCardFace::Jack),
+    StandardCard::Hearts(StandardCardFace::Queen),
+    StandardCard::Hearts(StandardCardFace::King),
+    StandardCard::Hearts(StandardCardFace::Joker),
+    StandardCard::Spades(StandardCardFace::Ace),
+    StandardCard::Spades(StandardCardFace::Two),
+    StandardCard::Spades(StandardCardFace::Three),
+    StandardCard::Spades(StandardCardFace::Four),
+    StandardCard::Spades(StandardCardFace::Five),
+    StandardCard::Spades(StandardCardFace::Six),
+    StandardCard::Spades(StandardCardFace::Seven),
+    StandardCard::Spades(StandardCardFace::Eight),
+    StandardCard::Spades(StandardCardFace::Nine),
+    StandardCard::Spades(StandardCardFace::Ten),
+    StandardCard::Spades(StandardCardFace::Jack),
+    StandardCard::Spades(StandardCardFace::Queen),
+    StandardCard::Spades(StandardCardFace::King),
+    StandardCard::Spades(StandardCardFace::Joker),
+    StandardCard::Clubs(StandardCardFace::Ace),
+    StandardCard::Clubs(StandardCardFace::Two),
+    StandardCard::Clubs(StandardCardFace::Three),
+    StandardCard::Clubs(StandardCardFace::Four),
+    StandardCard::Clubs(StandardCardFace::Five),
+    StandardCard::Clubs(StandardCardFace::Six),
+    StandardCard::Clubs(StandardCardFace::Seven),
+    StandardCard::Clubs(StandardCardFace::Eight),
+    StandardCard::Clubs(StandardCardFace::Nine),
+    StandardCard::Clubs(StandardCardFace::Ten),
+    StandardCard::Clubs(StandardCardFace::Jack),
+    StandardCard::Clubs(StandardCardFace::Queen),
+    StandardCard::Clubs(StandardCardFace::King),
+    StandardCard::Clubs(StandardCardFace::Joker),
+    StandardCard::Diamonds(StandardCardFace::Ace),
+    StandardCard::Diamonds(StandardCardFace::Two),
+    StandardCard::Diamonds(StandardCardFace::Three),
+    StandardCard::Diamonds(StandardCardFace::Four),
+    StandardCard::Diamonds(StandardCardFace::Five),
+    StandardCard::Diamonds(StandardCardFace::Six),
+    StandardCard::Diamonds(StandardCardFace::Seven),
+    StandardCard::Diamonds(StandardCardFace::Eight),
+    StandardCard::Diamonds(StandardCardFace::Nine),
+    StandardCard::Diamonds(StandardCardFace::Ten),
+    StandardCard::Diamonds(StandardCardFace::Jack),
+    StandardCard::Diamonds(StandardCardFace::Queen),
+    StandardCard::Diamonds(StandardCardFace::King),
+    StandardCard::Diamonds(StandardCardFace::Joker),
+];
+
+#[cfg(test)]
+mod test {
+    use super::{StandardCard, STANDARD_DECK_OF_CARDS};
+    const CARDS: [&str; 56] = [
+        "HEARTS:ACE",
+        "HEARTS:TWO",
+        "HEARTS:THREE",
+        "HEARTS:FOUR",
+        "HEARTS:FIVE",
+        "HEARTS:SIX",
+        "HEARTS:SEVEN",
+        "HEARTS:EIGHT",
+        "HEARTS:NINE",
+        "HEARTS:TEN",
+        "HEARTS:JACK",
+        "HEARTS:KING",
+        "HEARTS:QUEEN",
+        "HEARTS:JOKER",
+        "CLUBS:ACE",
+        "CLUBS:TWO",
+        "CLUBS:THREE",
+        "CLUBS:FOUR",
+        "CLUBS:FIVE",
+        "CLUBS:SIX",
+        "CLUBS:SEVEN",
+        "CLUBS:EIGHT",
+        "CLUBS:NINE",
+        "CLUBS:TEN",
+        "CLUBS:JACK",
+        "CLUBS:KING",
+        "CLUBS:QUEEN",
+        "CLUBS:JOKER",
+        "SPADES:ACE",
+        "SPADES:TWO",
+        "SPADES:THREE",
+        "SPADES:FOUR",
+        "SPADES:FIVE",
+        "SPADES:SIX",
+        "SPADES:SEVEN",
+        "SPADES:EIGHT",
+        "SPADES:NINE",
+        "SPADES:TEN",
+        "SPADES:JACK",
+        "SPADES:KING",
+        "SPADES:QUEEN",
+        "SPADES:JOKER",
+        "DIAMONDS:ACE",
+        "DIAMONDS:TWO",
+        "DIAMONDS:THREE",
+        "DIAMONDS:FOUR",
+        "DIAMONDS:FIVE",
+        "DIAMONDS:SIX",
+        "DIAMONDS:SEVEN",
+        "DIAMONDS:EIGHT",
+        "DIAMONDS:NINE",
+        "DIAMONDS:TEN",
+        "DIAMONDS:JACK",
+        "DIAMONDS:KING",
+        "DIAMONDS:QUEEN",
+        "DIAMONDS:JOKER",
+    ];
+
+    #[test]
+    fn deck_of_cards() {
+        assert_eq!(STANDARD_DECK_OF_CARDS.len(), 56);
+        for card in CARDS.iter() {
+            card.to_string()
+                .parse::<StandardCard>()
+                .expect(&format!("Failed to parse {}", card));
+        }
+        for card in STANDARD_DECK_OF_CARDS.iter() {
+            card.to_string()
+                .parse::<StandardCard>()
+                .expect(&format!("Failed to parse {}", card));
+        }
     }
 }
