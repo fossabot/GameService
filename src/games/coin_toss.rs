@@ -43,13 +43,15 @@ impl fmt::Display for CoinParseError {
 impl FromStr for Coin {
     type Err = CoinParseError;
     fn from_str(s: &str) -> Result<Coin, CoinParseError> {
-        if (s.is_empty() || s.len() > 5) || !s.to_lowercase().chars().enumerate().all(|(i, c)| match i {
-            0 => c == 'h' || c == 't',
-            1 => c == 'e' || c == 'a',
-            2 => c == 'a' || c == 'i',
-            3 => c == 'd' || c == 'l',
-            4 => c == 's',
-            _ => false,
+        if (s.is_empty() || s.len() > 5) || !s.to_lowercase().chars().enumerate().all(|(i, c)| {
+            match i {
+                0 => c == 'h' || c == 't',
+                1 => c == 'e' || c == 'a',
+                2 => c == 'a' || c == 'i',
+                3 => c == 'd' || c == 'l',
+                4 => c == 's',
+                _ => false,
+            }
         }) {
             Err(CoinParseError::new(s)) // Parse Error
         } else if s.starts_with('h') {
