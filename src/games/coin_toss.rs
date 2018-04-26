@@ -42,6 +42,7 @@ impl fmt::Display for CoinParseError {
 
 impl FromStr for Coin {
     type Err = CoinParseError;
+    #[cfg_attr(test, allow(block_in_if_condition_stmt))]
     fn from_str(s: &str) -> Result<Coin, CoinParseError> {
         if (s.is_empty() || s.len() > 5) || !s.to_lowercase().chars().enumerate().all(|(i, c)| {
             match i {

@@ -8,6 +8,8 @@ use diesel::prelude::*;
 #[cfg(feature = "auto_save")]
 use ConnectionPool;
 
+use std::i64;
+
 #[derive(Clone)]
 pub struct Player {
     #[cfg(feature = "auto_save")]
@@ -22,10 +24,15 @@ pub struct Player {
 }
 
 impl Player {
+    /// Health, this value is reduced when `DEFENSE` is 0
     const HEALTH: u64 = 100;
+    /// Attack Stat, This stat effects attack damage
     const ATTACK: i64 = 10;
-    const DEFENSE: i64 = 5;
+    /// Defense stat, 1:1 reduction of damage recieved
+    const DEFENSE: i64 = 100;
+    /// Evasion stat, this stat effections your chance of dodging an attack (Not Implemented)
     const EVASION: i64 = 1;
+    /// Accuracy stat, this stat effects your chance of hitting a target countering evasion `ACCURACY`:`EVASION` 3:1 (Not Implmented)
     const ACCURACY: i64 = 5;
     #[cfg(feature = "auto_save")]
     pub fn get(player_id: Option<u64>, pool: Option<&ConnectionPool>) -> Result<Self, PlayerError> {
@@ -91,16 +98,26 @@ impl Player {
     fn base_health(&self) -> u64 {
         Self::HEALTH + (Self::HEALTH as f64 * self.multiplyer()) as u64
     }
-    pub fn current_health(&self) -> u64 {
+    pub fn current_health(&self) -> i64 {
         let health: i64 = self.gear
             .iter()
             .fold(self.base_health() as i64, |base, gear| {
-                base + gear.health()
+                let health = gear.health();
+                base.checked_add(gear.health())
+                    .unwrap_or(if health > 0 { i64::MAX } else { 0 })
             });
-        if health < 0 || self.damage_recieved as i64 > health {
+        if health < 0 {
             0
         } else {
-            (health - self.damage_recieved) as u64
+            let def = self.defense();
+            let recieved_damge = if self.damage_recieved < def as i64 {
+                0
+            } else {
+                self.damage_recieved
+                    .checked_sub(self.defense() as i64)
+                    .unwrap_or(0)
+            };
+            health.checked_sub(recieved_damge).unwrap_or(0)
         }
     }
     pub fn accuracy(&self) -> i64 {
@@ -121,11 +138,16 @@ impl Player {
             .iter()
             .fold(base, |base, gear| gear.attack() + base)
     }
-    pub fn defense(&self) -> i64 {
+    pub fn defense(&self) -> u64 {
         let base = Self::DEFENSE + (Self::DEFENSE as f64 * self.multiplyer()) as i64;
-        self.gear
+        let def = self.gear
             .iter()
-            .fold(base, |base, gear| base + gear.defense()) as i64
+            .fold(base, |base, gear| base + gear.defense());
+        if def < 0 {
+            0
+        } else {
+            def as u64
+        }
     }
     pub fn resurect(&mut self) {
         self.damage_recieved = 0;
@@ -144,13 +166,12 @@ impl Player {
             dmg as u64
         }
     }
+    /// Recieve Damage
     pub fn recieve_damage(&mut self, amount: u64) -> u64 {
-        let damage = amount as i64 - (amount as i64 * (amount as i64 / self.defense()));
-        if damage <= 0 {
-            return 0;
-        }
-        self.damage_recieved = self.damage_recieved.checked_add(damage).unwrap_or(0);
-        damage as u64
+        self.damage_recieved = self.damage_recieved
+            .checked_add(amount as i64)
+            .unwrap_or(i64::MAX);
+        self.damage_recieved as u64
     }
     #[cfg(feature = "auto_save")]
     pub fn save(&self) -> Result<(), PlayerError> {
@@ -178,6 +199,19 @@ impl Player {
             None => Err(PlayerError::NoConnectionPool),
         }
     }
+    pub fn status(&self) -> String {
+        let def = self.defense();
+        let new_def = def.checked_sub(self.damage_recieved as u64).unwrap_or(0);
+        let damage_recieved: u64 = (self.damage_recieved as u64).checked_sub(def).unwrap_or(0);
+        let health = self.base_health();
+        let new_health = health - damage_recieved;
+        let level = self.level();
+        let exp = self.exp - (level * 10_000);
+        format!(
+            "Armor: {}/{}\nHealth: {}/{}\nEXP: {}/10,000\nLevel: {}",
+            new_def, def, new_health, health, exp, level
+        )
+    }
 }
 
 #[cfg(test)]
@@ -198,12 +232,53 @@ mod test {
         Player::get()
     }
 
+    // Test status
+    #[test]
+    fn status() {
+        let mut player = get_player();
+        player
+            .status()
+            .lines()
+            .enumerate()
+            .for_each(|(num, line)| match num {
+                0 => assert_eq!(
+                    line,
+                    format!("Armor: {}/{}", Player::DEFENSE, Player::DEFENSE)
+                ),
+                1 => assert_eq!(
+                    line,
+                    format!("Health: {}/{}", Player::HEALTH, Player::HEALTH)
+                ),
+                2 => assert_eq!(line, "EXP: 0/10,000"),
+                3 => assert_eq!(line, "Level: 0"),
+                _ => unreachable!(),
+            });
+        player.damage_recieved = 10;
+        player
+            .status()
+            .lines()
+            .enumerate()
+            .for_each(|(num, line)| match num {
+                0 => assert_eq!(
+                    line,
+                    format!("Armor: {}/{}", Player::DEFENSE - 10, Player::DEFENSE)
+                ),
+                1 => assert_eq!(
+                    line,
+                    format!("Health: {}/{}", Player::HEALTH, Player::HEALTH)
+                ),
+                2 => assert_eq!(line, "EXP: 0/10,000"),
+                3 => assert_eq!(line, "Level: 0"),
+                _ => unreachable!(),
+            });
+    }
+
     // Test recieve_damage reduces the damage recieved
     #[test]
     fn recieve_damage() {
         #[allow(unused_mut)]
         let mut player = get_player();
-        assert_eq!(player.current_health(), Player::HEALTH);
+        assert_eq!(player.current_health() as i64, Player::HEALTH as i64);
         panic!("Damage calculation isnt completed")
     }
 
@@ -231,5 +306,4 @@ mod test {
     fn gear_modifers() {
         panic!("No written yet!")
     }
-
 }

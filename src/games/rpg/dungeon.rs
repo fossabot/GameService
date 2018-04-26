@@ -34,11 +34,7 @@ impl Dungeon {
             gain_exp: floor >= player.level() / 10,
             player,
         };
-        dungeon.do_a_floor();
-        dungeon.do_a_floor();
-        dungeon.do_a_floor();
-        dungeon.do_a_floor();
-        dungeon.do_a_floor();
+        (0..5).for_each(|_| dungeon.do_a_floor());
         if !dungeon.player.is_alive() {
             if dungeon.player.level() <= 10 {
                 dungeon
@@ -146,11 +142,20 @@ impl Dungeon {
         if !self.player.is_alive() {
             return;
         }
+        let def = self.player.defense() as i64;
+        if self.player.damage_recieved < def {
+            self.player.damage_recieved = 0;
+        } else {
+            self.player.damage_recieved -= def;
+        }
         let mut rng = rand::thread_rng();
         let mut player_turn = rng.gen_weighted_bool(2);
         let mut monster = Dungeon::spawn_monster(self.current_floor);
-        self.log
-            .push(format!("Current Health: {}", self.player.current_health()));
+        self.log.push(format!(
+            "Current Health: {}, Defense: {}",
+            self.player.current_health(),
+            def
+        ));
         if player_turn {
             self.log.push(format!(
                 "Encountered a {:?}, it hasnt Spotted you yet",
@@ -170,7 +175,7 @@ impl Dungeon {
                 let player_health = self.player.current_health();
                 player_turn = !player_turn;
                 if self.auto_buy
-                    && player_health < (player_health as f64 * (30f64 / 100f64)).round() as u64
+                    && player_health < (player_health as f64 * (30f64 / 100f64)).round() as i64
                 {
                     self.buy_potion()
                 }
