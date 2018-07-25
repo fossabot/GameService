@@ -58,7 +58,8 @@ fn test_blackjack_routes() {
         let mut resp = client.post("/blackjack/0/create/1").dispatch();
         let resp: Response = serde_json::from_str(&resp.body_string().unwrap()).unwrap();
         assert_eq!(resp.status_code, 200);
-        let resp = resp.status
+        let resp = resp
+            .status
             .expect("An Error has occurred on session creation");
         assert_eq!(resp.dealer_hand.len(), 1);
         assert!(resp.game_state.is_none());

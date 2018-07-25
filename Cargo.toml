@@ -12,26 +12,32 @@ required-features = [
 ]
 
 [dependencies]
-cfg-if = "0.1.2"
+cfg-if = "0.1.4"
 cute = "0.3.0"
-dotenv = "0.11.0"
-lazy_static = "1.0.0"
-log = "0.4.1"
-rand = "0.4.2"
-regex = "0.2.10"
-serde = "1.0.43"
-serde_derive = "1.0.43"
-serde_json = "1.0.16"
+dotenv = "0.13.0"
+lazy_static = "1.0.2"
+log = "0.4.3"
+rand = "0.5.4"
+regex = "1.0.2"
+serde = "1.0.70"
+serde_derive = "1.0.70"
+serde_json = "1.0.24"
+failure = "0.1.1"
+failure_derive = "0.1.1"
+ron = "0.3.0"
+
+[dependencies.fuzen_macros]
+git = "https://github.com/Fuzen-py/RustMacros"
 
 [dependencies.diesel]
 features = ["postgres"]
 optional = true
-version = "1.2.2"
+version = "1.3.2"
 
 [dependencies.diesel_migrations]
 features = ["postgres"]
 optional = true
-version = "1.2.0"
+version = "1.3.0"
 
 [dependencies.r2d2]
 optional = true
@@ -43,17 +49,17 @@ version = "1.0.0"
 
 [dependencies.rocket]
 optional = true
-version = "0.3.8"
+version = "0.3.15"
 
 [dependencies.rocket_codegen]
 optional = true
-version = "0.3.8"
+version = "0.3.15"
 
 [dependencies.rocket_contrib]
 default-features = false
 features = ["json"]
 optional = true
-version = "0.3.8"
+version = "0.3.15"
 
 [features]
 auto_save = [
@@ -73,4 +79,3 @@ web = [
 ]
 
 [dev-dependencies]
-clippy = "0.0.195"

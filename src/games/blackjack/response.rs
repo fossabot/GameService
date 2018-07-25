@@ -1,5 +1,5 @@
-use super::{BlackJack, BlackJackError, GameState};
-use std::error::Error;
+use super::{BlackJack, GameState};
+use failure::Error;
 
 #[derive(Deserialize, Serialize)]
 pub struct Success {
@@ -64,15 +64,15 @@ impl Response {
     }
 
     /// Response For Errors
-    pub fn error(error: &BlackJackError) -> Self {
-        use self::BlackJackError::*;
+    pub fn error(error: &Error) -> Self {
         Self {
-            status_code: error.status_code(),
-            status: Err(match *error {
-                #[cfg(feature = "auto_save")]
-                DieselResult(_) | R2d2(_) => "Internal Server Error",
-                CardParse(_) => "Error parsing cards",
-                _ => error.description(),
+            // TODO: Parse Error
+            status_code: 500,
+            status: Err(match *error.cause() {
+                // #[cfg(feature = "auto_save")]
+                // DieselError | R2D2Error => "Internal Server Error",
+                // CardParse(_) => "Error parsing cards",
+                _ => "Unexpected Error",
             }.to_string()),
         }
     }

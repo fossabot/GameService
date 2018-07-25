@@ -1,12 +1,12 @@
 use rand::{self, Rng};
 pub struct Monster {
-    health: u64,
-    pub attack: u64,
-    pub defense: u64,
-    pub accuracy: u64,
-    pub evasion: u64,
+    health: u32,
+    pub attack: u32,
+    pub defense: u32,
+    pub accuracy: u32,
+    pub evasion: u32,
     pub monster_type: MonsterType,
-    floor: u64,
+    floor: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -20,7 +20,7 @@ impl MonsterType {}
 
 impl Monster {
     /// Returns a monster based on the floor
-    pub fn new(monster: MonsterType, floor: u64) -> Self {
+    pub fn new(monster: MonsterType, floor: u32) -> Self {
         use self::MonsterType::*;
         let mut rng = rand::thread_rng();
         match monster {
@@ -56,23 +56,24 @@ impl Monster {
             },
         }
     }
-    fn adjust_stats(floor: u64, base: u64) -> u64 {
-        base + (base as f64 * (floor as f64 / 3f64)) as u64
+    fn adjust_stats(floor: u32, base: u32) -> u32 {
+        base + (base as f32 * (floor as f32 / 3f32)).round() as u32
     }
 
     // Coins
-    pub fn recieve_damage(&mut self, amount: u64) -> u64 {
-        let damage = amount - (amount * (amount / self.defense));
+    pub fn recieve_damage(&mut self, amount: u32) -> u32 {
+        let damage =
+            amount - (amount as f32 * (amount as f32 / self.defense as f32)).round() as u32;
         self.health = self.health.checked_sub(damage).unwrap_or(0);
         damage
     }
     pub fn is_alive(&self) -> bool {
-        self.health > 0u64
+        self.health > 0u32
     }
-    pub fn do_attack(&self) -> u64 {
+    pub fn do_attack(&self) -> u32 {
         self.attack
     }
-    pub fn loot(self) -> Option<u64> {
+    pub fn loot(self) -> Option<u32> {
         if self.is_alive() {
             None
         } else {

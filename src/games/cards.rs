@@ -82,7 +82,8 @@ impl FromStr for StandardCard {
             static ref RE: Regex = Regex::new(r"(.*):(.*)").unwrap();
         }
 
-        let data = RE.captures_iter(&txt)
+        let data = RE
+            .captures_iter(&txt)
             .next()
             .ok_or_else(|| StandardCardParseError::NoCaptureGroup)?;
 

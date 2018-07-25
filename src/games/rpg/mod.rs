@@ -12,6 +12,6 @@ mod shop;
 
 use self::dungeon::Dungeon;
 pub use self::game::Game;
-use self::gear::Gear;
+pub use self::gear::{Gear, GearInfoStore, GearType, GEAR_ITEMS};
 pub use self::player::Player;
 use self::shop::Shop;

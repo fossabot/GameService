@@ -35,7 +35,7 @@ fn user_info(db_pool: State<ConnectionPool>, user: u64) -> Json<Response> {
 fn create_user(db_pool: State<ConnectionPool>, user: u64, bet: u64) -> Json<Response> {
     Json(match BlackJack::new(user, bet, db_pool.clone()) {
         Ok(bj) => Response::success(&bj),
-        Err(err) => Response::error(&err),
+        Err(err) => Response::error(&err.into()),
     })
 }
 
@@ -71,7 +71,7 @@ fn claim(db_pool: State<ConnectionPool>, user: u64) -> Json<Response> {
     Json(match BlackJack::restore(&db_pool, user) {
         Ok(mut bj) => match bj.claim() {
             Ok(_) => Response::success(&bj),
-            Err(err) => Response::error(&err),
+            Err(err) => Response::error(&err.into()),
         },
         Err(err) => Response::error(&err),
     })

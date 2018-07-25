@@ -1,9 +1,10 @@
+use super::gear::{Gear, GearInfoStore};
 use super::monster::{Monster, MonsterType};
 use super::Player;
 use rand::{self, Rng};
 pub struct Dungeon {
     pub player: Player,
-    pub current_floor: u64,
+    pub current_floor: u32,
     pub balance: u64,
     auto_buy: bool,
     pub log: Vec<String>,
@@ -13,7 +14,7 @@ pub struct Dungeon {
 impl Dungeon {
     /// new balance and message log
     pub fn challange(
-        floor: u64,
+        floor: u32,
         player: Player,
         balance: u64,
         auto_buy: bool,
@@ -31,7 +32,7 @@ impl Dungeon {
                 "Starting on floor {}, AUtobuy: {}, Starting Bal: {}",
                 floor, auto_buy, balance
             )],
-            gain_exp: floor >= player.level() / 10,
+            gain_exp: floor >= (player.level() / 10) as u32,
             player,
         };
         (0..5).for_each(|_| dungeon.do_a_floor());
@@ -56,15 +57,22 @@ impl Dungeon {
         let mut rng = rand::thread_rng();
         let gear = self.player.gear.clone();
         let mut gear_degraded = false;
-        self.player.gear = gear.into_iter()
-            .map(|mut g| {
-                if g.enchant > 1 && rng.gen_weighted_bool(100) {
-                    gear_degraded = true;
-                    g.decrease_enchant(1);
-                    self.log
-                        .push(format!("The priest took an enchantment lvl of {}", g));
+        self.player.gear = gear
+            .into_iter()
+            .map(|mut g: GearInfoStore| match g.into() {
+                Ok(gear) => {
+                    let gear: Gear = gear;
+                    if g.enchant > 1 && rng.gen_bool(0.01) {
+                        gear_degraded = true;
+                        g.enchant -= 1;
+                        self.log.push(format!(
+                            "The priest took an enchantment lvl of {}",
+                            gear.name()
+                        ));
+                    }
+                    g
                 }
-                g
+                _ => g,
             })
             .collect();
         if !gear_degraded {
@@ -105,31 +113,37 @@ impl Dungeon {
 
     /// Returns a random Potion effect heal/poison
     pub fn buy_potion(&mut self) {
-        let price = 200 * (self.current_floor / 5) + 30;
+        let price = 200 * (u64::from(self.current_floor) / 5) + 30;
         if self.balance < price {
             return;
         }
         self.balance -= price;
         let mut rng = rand::thread_rng();
-        self.player.damage_recieved -= if !rng.gen_weighted_bool(30) {
-            // Return Healing effect
-            let effect = rng.gen_range(0i64, 100i64);
+        if !rng.gen_bool(0.33) {
+            let effect = rng.gen_range(10u32, 100u32);
+            self.player.damage_recieved =
+                self.player.damage_recieved.checked_sub(effect).unwrap_or(0);
             self.log.push(format!(
-                "Purchased a potion for {}, {} HP gained",
-                price, effect
+                "Purchased a potion for {} and gained {} HP",
+                pretty_num!(price),
+                pretty_num!(effect)
             ));
-            effect
         } else {
-            let effect = rng.gen_range(-50i64, 0i64);
+            let effect = rng.gen_range(0u32, 50u32);
+            self.player.damage_recieved = self
+                .player
+                .damage_recieved
+                .checked_add(effect)
+                .unwrap_or(::std::u32::MAX);
             self.log.push(format!(
-                "Purchased a potion for {} but it was rotten, {} HP Lost",
-                price, effect
-            ));
-            effect
-        };
+                "Purchased a potion for {} but, it was rotten, {} HP Lost",
+                pretty_num!(price),
+                pretty_num!(effect)
+            ))
+        }
     }
     /// Spawns a random monster, stats scaling to the floor
-    pub fn spawn_monster(floor: u64) -> Monster {
+    pub fn spawn_monster(floor: u32) -> Monster {
         Monster::new(
             *rand::thread_rng()
                 .choose(&[MonsterType::Bat, MonsterType::Golem, MonsterType::Orc])
@@ -142,19 +156,18 @@ impl Dungeon {
         if !self.player.is_alive() {
             return;
         }
-        let def = self.player.defense() as i64;
-        if self.player.damage_recieved < def {
+        let armor = self.player.armor();
+        if self.player.damage_recieved < armor {
             self.player.damage_recieved = 0;
         } else {
-            self.player.damage_recieved -= def;
+            self.player.damage_recieved -= armor;
         }
-        let mut rng = rand::thread_rng();
-        let mut player_turn = rng.gen_weighted_bool(2);
+        let mut player_turn = rand::random();
         let mut monster = Dungeon::spawn_monster(self.current_floor);
         self.log.push(format!(
             "Current Health: {}, Defense: {}",
             self.player.current_health(),
-            def
+            armor
         ));
         if player_turn {
             self.log.push(format!(
@@ -175,7 +188,7 @@ impl Dungeon {
                 let player_health = self.player.current_health();
                 player_turn = !player_turn;
                 if self.auto_buy
-                    && player_health < (player_health as f64 * (30f64 / 100f64)).round() as i64
+                    && player_health < (f64::from(player_health) * (30f64 / 100f64)).round() as u32
                 {
                     self.buy_potion()
                 }
@@ -215,7 +228,7 @@ impl Dungeon {
             let loot = monster.loot();
             match loot {
                 Some(amount) => {
-                    self.balance += amount;
+                    self.balance += u64::from(amount);
                     self.log
                         .push(format!("Gained {} balance is now {}", amount, self.balance));
                 }

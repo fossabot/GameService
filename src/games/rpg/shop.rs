@@ -1,58 +1,54 @@
 use super::enchant::Enchanter;
+use super::errors;
 use super::errors::{EnchantError, ShopError};
 use super::Gear;
 pub struct Shop;
 
+use failure::Error;
+
 impl Shop {
     /// Calculate the gear price based on enchantment lvl
-    pub fn enchant_price(gear: &Gear) -> Result<u64, ShopError> {
-        if gear.enchant == 255 {
-            Err(EnchantError::MaxEnchant.into())
+    pub fn enchant_price(gear: &Gear) -> Result<u64, EnchantError> {
+        let lvl = gear.enchant_lvl()?;
+        if gear.clone().max_enchant()? == lvl {
+            Err(EnchantError::MaxEnchant)
         } else {
-            Ok((u64::from(gear.enchant) + 1).pow(4) * 100)
+            Ok((u64::from(lvl) + 1).pow(4) * 100)
         }
     }
-    const REROLL_PRICE: u64 = 2_531_250;
-    const CURSE_PRICE: u64 = 5_248_800;
+    // const REROLL_PRICE: u64 = 2_531_250;
+    // const CURSE_PRICE: u64 = 5_248_800;
 
     /// Enchant Gear for a price
-    pub fn enchant_gear(g: &mut Gear, funds: &mut u64) -> Result<bool, ShopError> {
+    pub fn enchant_gear(g: &mut Gear, funds: &mut u64) -> Result<bool, Error> {
         // Enchantment Lvl
-        let level = g.enchant;
-        // Price to perform enchant
-        let price = Shop::enchant_price(g)?;
-        if price > *funds {
-            Err(ShopError::NotEnoughFunds(price))
+        if let Ok(level) = g.enchant_lvl() {
+            let price = Shop::enchant_price(g)?;
+            if price > *funds {
+                Err(ShopError::NotEnoughFunds {
+                    amount: price,
+                    balance: *funds,
+                }.into())
+            } else {
+                *funds -= price;
+                Enchanter::enchant_gear(g)?;
+                Ok(g.enchant_lvl().unwrap() > level)
+            }
         } else {
-            *funds -= price;
-            Enchanter::enchant_gear(g)?;
-            // Checks if enchantment lvl is greater than current lvl
-            Ok(g.enchant > level)
+            Err(errors::EnchantError::NotEnchantable.into())
         }
     }
 
-    /// Reroll a gear's lowest stat for a price
-    pub fn reroll_gear(g: &mut Gear, funds: &mut u64) -> Result<(), ShopError> {
-        if Shop::REROLL_PRICE > *funds {
-            return Err(ShopError::NotEnoughFunds(Shop::REROLL_PRICE));
-        }
-        Enchanter::reroll_stats(g)?;
-        *funds -= Shop::REROLL_PRICE;
-        Ok(())
-    }
+    // Removed: Gear can no longer be re-rolled
+    // /// Reroll a gear's lowest stat for a price
+    // pub fn reroll_gear(g: &mut Gear, funds: &mut u64) -> Result<(), Error> {}
 
-    // Curses a random stat on the gear for a price
-    pub fn curse_gear(g: &mut Gear, funds: &mut u64) -> Result<(), ShopError> {
-        if Shop::CURSE_PRICE > *funds {
-            return Err(ShopError::NotEnoughFunds(Shop::CURSE_PRICE));
-        }
-        Enchanter::curse_gear(g)?;
-        *funds -= Shop::CURSE_PRICE;
-        Ok(())
-    }
+    // Removed: Gear can no longer be cursed
+    // /// Curses a random stat on the gear for a price
+    // pub fn curse_gear(g: &mut Gear, funds: &mut u64) -> Result<(), ShopError> {}
 
     /// Returns the odds of success as a precentage
-    pub fn get_enchant_odds(enchant_lvl: u8) -> Result<String, ShopError> {
+    pub fn get_enchant_odds(enchant_lvl: u8) -> Result<String, Error> {
         Ok(format!("{}%", Enchanter::odds(enchant_lvl)? * 100.0))
     }
 }

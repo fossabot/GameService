@@ -1,7 +1,10 @@
-use super::errors::GameError;
+use super::errors;
+use super::gear::GearID;
 use super::{Dungeon, Gear, Player, Shop};
 #[cfg(feature = "auto_save")]
 use ConnectionPool;
+
+use failure::Error;
 
 pub struct Game {
     player: Player,
@@ -22,7 +25,7 @@ impl Game {
         player_id: Option<u64>,
         conn_pool: Option<&ConnectionPool>,
         funds: u64,
-    ) -> Result<Self, GameError> {
+    ) -> Result<Self, Error> {
         Ok(Self {
             player: Player::get(player_id, conn_pool)?,
             funds,
@@ -32,7 +35,7 @@ impl Game {
 
     /// Create a new Game session
     #[cfg(not(feature = "auto_save"))]
-    pub fn new(player: Player, funds: u64) -> Result<Self, GameError> {
+    pub fn new(player: Player, funds: u64) -> Result<Self, Error> {
         Ok(Self {
             player,
             funds,
@@ -41,7 +44,7 @@ impl Game {
     }
 
     /// de-increment the target floor to the closest devisable of 5 and run the next 5 floors
-    pub fn run_floors(&mut self, target_floor: u64, auto_buy: bool) {
+    pub fn run_floors(&mut self, target_floor: u32, auto_buy: bool) {
         let results = Dungeon::challange(target_floor, self.player.clone(), self.funds, auto_buy);
         self.funds = results.0;
         self.log.push(results.1);
@@ -50,78 +53,72 @@ impl Game {
 
     /// Show the gear of the player
     pub fn show_gear(&self) -> Vec<Gear> {
-        let mut gear = self.player.gear.clone();
+        let mut gear: Vec<Gear> = self
+            .player
+            .gear
+            .iter()
+            .filter_map(|g| {
+                let g: Result<Gear, errors::GearParseError> = (*g).into();
+                g.ok()
+            })
+            .collect();
         gear.sort();
         gear
     }
 
-    /// Enchant the specified gear of the player (use `show_gear` to get the gear in order)
-    pub fn enchant_gear(&mut self, gear: usize) -> String {
-        self.player.gear.sort();
-        let mut gear = self.player.gear.remove(gear);
-        match Shop::enchant_gear(&mut gear, &mut self.funds) {
-            Ok(success) => {
-                self.player.gear.push(gear.clone());
-                self.player.gear.sort();
-                let msg = if success {
-                    format!("Successfully enchanted {}!", gear)
-                } else {
-                    format!("Failed to enchant {}!", gear)
-                };
-                self.log.push(msg.clone());
-                msg
-            }
-            Err(why) => {
-                let msg = format!("Enchantment Error: {}", why);
-                // warn!("{}", msg);
-                self.log.push(msg.clone());
-                msg
-            }
+    pub fn get_gear(&self, pos: usize) -> Result<Gear, Error> {
+        match self.show_gear().get(pos) {
+            Some(g) => Ok(g.clone()),
+            None => Err(errors::GearParseError::DoesNotExist { id: 0 }.into()),
         }
     }
 
+    /// Enchant the specified gear of the player (use `show_gear` to get the gear in order)
+    pub fn enchant_gear(&mut self, gear_id: GearID) -> String {
+        self.player
+            .gear
+            .iter()
+            .position(|ref g| g.id() == gear_id)
+            .and_then(|pos| {
+                if let Ok(mut gear) = self.player.gear.remove(pos).into() {
+                    match Shop::enchant_gear(&mut gear, &mut self.funds) {
+                        Ok(success) => {
+                            self.player.gear.push(gear.clone().into());
+                            let msg = if success {
+                                format!("Successfully enchanted {}!", gear.name())
+                            } else {
+                                format!("Failed to enchant {}!", gear.name())
+                            };
+                            self.log.push(msg.clone());
+                            Some(msg)
+                        }
+                        Err(why) => {
+                            let msg = format!("Enchantment Error: {}", why);
+                            // warn!("{}", msg);
+                            self.log.push(msg.clone());
+                            Some(msg)
+                        }
+                    }
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| format!("GearID Does not exist: {}", gear_id))
+    }
+
     /// Returns the % chance of enchant success as a string
-    pub fn enchant_odds(&self, gear: usize) -> Result<String, GameError> {
-        let enchant = self.player.gear[gear].enchant;
-        Ok(Shop::get_enchant_odds(enchant)?)
+    pub fn enchant_odds(&self, gear: usize) -> Result<String, Error> {
+        let gear = self.get_gear(gear)?;
+        Shop::get_enchant_odds(gear.enchant_lvl()?)
     }
 
-    /// Curses gear, returns result as a string
-    pub fn curse_gear(&mut self, gear: usize) -> String {
-        self.player.gear.sort();
-        let mut g = self.player.gear.remove(gear);
-        let msg = match Shop::curse_gear(&mut g, &mut self.funds) {
-            Ok(_) => {
-                self.player.gear.push(g.clone());
-                format!("Successfully cursed {}!", g)
-            }
-            Err(why) => {
-                let msg = format!("Failed to curse {}, {}", g, why);
-                // warn!("{}", why);
-                msg
-            }
-        };
-        self.log.push(msg.clone());
-        msg
-    }
+    // Removed: Curses removed for balancing
+    // /// Curses gear, returns result as a string
+    // pub fn curse_gear(&mut self, gear: usize) -> String {}
 
-    /// Reroll gear stats
-    pub fn reroll_gear(&mut self, gear: usize) -> String {
-        let mut g = self.player.gear.remove(gear);
-        let msg = match Shop::reroll_gear(&mut g, &mut self.funds) {
-            Ok(_) => {
-                self.player.gear.push(g.clone());
-                format!("Successfully re-rolled {}", g)
-            }
-            Err(why) => {
-                let msg = format!("Failed to re-roll, {}", why);
-                // warn!("{}", msg);
-                msg
-            }
-        };
-        self.log.push(msg.clone());
-        msg
-    }
+    // Removed: Gear re-rolls was removed (Balance is nice)
+    // /// Reroll gear stats
+    // pub fn reroll_gear(&mut self, gear: usize) -> String {}
 }
 
 /// Auto Save

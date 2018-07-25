@@ -1,11 +1,9 @@
 // TODO: Return only Result<T, E> use a transformer to change response
 
-use rand::{thread_rng, Rng};
+use rand::random;
 use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
-
-const WEIGHT: u32 = 2;
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
 pub enum Coin {
@@ -66,8 +64,7 @@ impl FromStr for Coin {
 impl Coin {
     /// Flips a coun, returning a Coin with its current Side up
     pub fn flip() -> Coin {
-        let mut rng = thread_rng();
-        if rng.gen_weighted_bool(WEIGHT) {
+        if random() {
             Coin::Heads
         } else {
             Coin::Tails

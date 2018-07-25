@@ -1,217 +1,127 @@
+use super::gear::GearID;
 #[cfg(feature = "auto_save")]
 use diesel::result::Error as DieselResultError;
 #[cfg(feature = "auto_save")]
 use r2d2::Error as R2d2Error;
 use serde_json::Error as SerdeJsonError;
-use std::char::ParseCharError;
-use std::convert::From;
-use std::error::Error as StdError;
-use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum GearTypeParseError {
-    InvalidType,
-    CharParse(ParseCharError),
+    #[fail(display = "Invalid type: {}", type_name)]
+    InvalidType { type_name: String },
+    #[fail(display = "Failed to parse json: {}", err)]
+    JsonError { err: Box<SerdeJsonError> },
 }
 
-impl fmt::Display for GearTypeParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for GearTypeParseError {
-    fn description(&self) -> &str {
-        use self::GearTypeParseError::*;
-        match *self {
-            InvalidType => "Not a valid Gear Type",
-            CharParse(ref err) => err.description(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum GearParseError {
-    JsonError(SerdeJsonError),
+    #[fail(display = "Failed to read Json")]
+    JsonError { err: Box<SerdeJsonError> },
+    #[fail(display = "Invalid ID: {}", id)]
+    DoesNotExist { id: GearID },
 }
 
 impl From<SerdeJsonError> for GearParseError {
     fn from(error: SerdeJsonError) -> GearParseError {
-        GearParseError::JsonError(error)
-    }
-}
-
-impl fmt::Display for GearParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for GearParseError {
-    fn description(&self) -> &str {
-        use self::GearParseError::*;
-        match *self {
-            JsonError(ref err) => err.description(),
+        GearParseError::JsonError {
+            err: Box::new(error),
         }
     }
 }
 
-#[derive(Debug)]
+// impl fmt::Display for GearParseError {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         f.write_str(self.description())
+//     }
+// }
+
+// impl StdError for GearParseError {
+//     fn description(&self) -> &str {
+//         use self::GearParseError::*;
+//         match *self {
+//             JsonError(ref err) => err.description(),
+//         }
+//     }
+// }
+
+#[derive(Debug, Fail)]
 pub enum PlayerError {
     #[cfg(feature = "auto_save")]
-    DieselResult(DieselResultError),
+    #[fail(display = "{}", err)]
+    DieselResult { err: Box<DieselResultError> },
     #[cfg(feature = "auto_save")]
-    R2d2(R2d2Error),
-    GearError(GearParseError),
+    #[fail(display = "{}", err)]
+    R2d2 { err: Box<R2d2Error> },
+    #[fail(display = "{}", err)]
+    GearError { err: GearParseError },
     #[cfg(feature = "auto_save")]
+    #[fail(display = "No Connection Pool")]
     NoConnectionPool,
     #[cfg(feature = "auto_save")]
+    #[fail(display = "No ID")]
     NoID,
     #[cfg(feature = "auto_save")]
+    #[fail(display = "Attempted to save when configured not to")]
     DoNotSaveConfig,
-}
-
-impl fmt::Display for PlayerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for PlayerError {
-    fn description(&self) -> &str {
-        use self::PlayerError::*;
-        match *self {
-            #[cfg(feature = "auto_save")]
-            R2d2(ref err) => err.description(),
-            #[cfg(feature = "auto_save")]
-            DieselResult(ref err) => err.description(),
-            GearError(ref err) => err.description(),
-            #[cfg(feature = "auto_save")]
-            NoConnectionPool => "There is no associated connection pool",
-            #[cfg(feature = "auto_save")]
-            NoID => "There is no associated ID",
-            #[cfg(feature = "auto_save")]
-            DoNotSaveConfig => "You attempted to save when Save is set to false",
-        }
-    }
 }
 
 #[cfg(feature = "auto_save")]
 impl From<DieselResultError> for PlayerError {
     fn from(error: DieselResultError) -> PlayerError {
-        PlayerError::DieselResult(error)
+        PlayerError::DieselResult {
+            err: Box::new(error),
+        }
     }
 }
 
 #[cfg(feature = "auto_save")]
 impl From<R2d2Error> for PlayerError {
     fn from(error: R2d2Error) -> PlayerError {
-        PlayerError::R2d2(error)
+        PlayerError::R2d2 {
+            err: Box::new(error),
+        }
     }
 }
 
 impl From<GearParseError> for PlayerError {
     fn from(error: GearParseError) -> PlayerError {
-        PlayerError::GearError(error)
+        PlayerError::GearError { err: error }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum EnchantError {
+    #[fail(display = "Item has reached its max enchantment level")]
     MaxEnchant,
+    #[fail(display = "Item is not enchantable")]
     NotEnchantable,
-    UnCursable,
-    MaxCurses,
-    NotHighEnoughEnchantment(u16),
+    #[fail(
+        display = "Not High enough enchantment level for this action, required level {}.",
+        req
+    )]
+    NotHighEnoughEnchantment { req: u16 },
+    #[fail(display = "Not Enough Divinity")]
+    NotEnoughDivinity,
+    #[fail(display = "Cannot hold Divinity")]
+    CannotHoldDivinity,
+    #[fail(display = "Max Divinity")]
+    MaxDivinity,
 }
 
-impl fmt::Display for EnchantError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for EnchantError {
-    fn description(&self) -> &str {
-        use self::EnchantError::*;
-        match *self {
-            MaxEnchant => "Item has reached maximum enchant.",
-            NotEnchantable => "Item cannot be enchanted.",
-            UnCursable => "Item cannot be cursed.",
-            MaxCurses => "Item has reached its max curses.",
-            NotHighEnoughEnchantment(_) => {
-                "Item does not have enough enchantments to sacrifice for this action."
-            }
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum ShopError {
-    NotEnoughFunds(u64),
-    EnchantmentError(EnchantError),
-}
-
-impl fmt::Display for ShopError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for ShopError {
-    fn description(&self) -> &str {
-        use self::ShopError::*;
-        match *self {
-            NotEnoughFunds(_) => "You cannot afford this item",
-            EnchantmentError(ref err) => err.description(),
-        }
-    }
+    #[fail(
+        display = "Not enough funds for this action. Requires {} but your balance is {}.",
+        amount,
+        balance
+    )]
+    NotEnoughFunds { balance: u64, amount: u64 },
+    #[fail(display = "{}", err)]
+    EnchantError { err: EnchantError },
 }
 
 impl From<EnchantError> for ShopError {
     fn from(err: EnchantError) -> ShopError {
-        ShopError::EnchantmentError(err)
-    }
-}
-
-#[derive(Debug)]
-pub enum GameError {
-    Shop(ShopError),
-    Enchant(EnchantError),
-    Player(PlayerError),
-}
-
-impl fmt::Display for GameError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for GameError {
-    fn description(&self) -> &str {
-        use self::GameError::*;
-        match *self {
-            Shop(ref err) => err.description(),
-            Enchant(ref err) => err.description(),
-            Player(ref err) => err.description(),
-        }
-    }
-}
-
-impl From<ShopError> for GameError {
-    fn from(err: ShopError) -> GameError {
-        GameError::Shop(err)
-    }
-}
-
-impl From<EnchantError> for GameError {
-    fn from(err: EnchantError) -> GameError {
-        GameError::Enchant(err)
-    }
-}
-
-impl From<PlayerError> for GameError {
-    fn from(err: PlayerError) -> GameError {
-        GameError::Player(err)
+        ShopError::EnchantError { err }
     }
 }

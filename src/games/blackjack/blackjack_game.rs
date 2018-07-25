@@ -7,12 +7,13 @@ use diesel;
 use diesel::prelude::*;
 #[cfg(feature = "auto_save")]
 use diesel::result::Error as DieselResultError;
+use failure::Error;
 #[cfg(feature = "auto_save")]
 use r2d2::Error as R2d2Error;
-use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 #[cfg(feature = "auto_save")]
 use ConnectionPool;
+
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum GameState {
     InProgress,
@@ -30,75 +31,69 @@ impl Display for GameState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum BlackJackError {
-    CardParse(CardParseError),
+    #[fail(display = "The dealer has already lost this game.")]
     DealerAlreadyLost,
+    #[fail(
+        display = "The dealer has already chosen to stay, the dealer is not allowed to make another move."
+    )]
     DealerAlreadyPressedStay,
+    #[fail(display = "The dealer has already won this game.")]
     DealerAlreadyWon,
-    #[cfg(feature = "auto_save")]
-    DieselResult(DieselResultError),
+    #[fail(display = "The game is over.")]
     GameOver,
-    InvalidResultCount(usize),
+    #[fail(
+        display = "Invalid result count, found {} and expected {}",
+        ct,
+        expt
+    )]
+    InvalidResultCount { ct: usize, expt: usize },
+    #[fail(display = "No Card")]
     NoCard,
+    #[fail(display = "Player has already lost this game.")]
     PlayerAlreadyLost,
+    #[fail(
+        display = "Player has already chosen to stay, the play is not premitted to make another move"
+    )]
     PlayerAlreadyPressedStay,
+    #[fail(display = "Player has already won this game.")]
     PlayerAlreadyWon,
+    #[fail(
+        display = "Player has not finished making their moves, the dealer is not premitted to take action."
+    )]
     PlayerNotDoneYet,
-    #[cfg(feature = "auto_save")]
-    R2d2(R2d2Error),
+    #[fail(display = "This session already exists")]
     SessionAlreadyExists,
+    #[fail(display = "Game is still in progress")]
     GameStillInProgress,
+    #[fail(display = "Session does not exist")]
     SessionDoesNotExist,
-}
-
-impl Display for BlackJackError {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        f.write_str(self.description())
-    }
-}
-
-impl StdError for BlackJackError {
-    fn description(&self) -> &str {
-        use self::BlackJackError::*;
-        match *self {
-            CardParse(ref inner) => inner.description(),
-            DealerAlreadyLost => "The dealer already lost",
-            DealerAlreadyPressedStay => "The dealer already pressed stay",
-            DealerAlreadyWon => "The dealer already won",
-            #[cfg(feature = "auto_save")]
-            DieselResult(ref inner) => inner.description(),
-            GameOver => "The game is over",
-            InvalidResultCount(_) => "More than or less than 1 game result found",
-            NoCard => "No card was able to be drawn",
-            PlayerAlreadyLost => "You already lost",
-            PlayerAlreadyPressedStay => "You already pressed stay",
-            PlayerAlreadyWon => "You already won",
-            PlayerNotDoneYet => "Player is not done yet",
-            #[cfg(feature = "auto_save")]
-            R2d2(ref inner) => inner.description(),
-            SessionAlreadyExists => "Player already exists, please finish and claim result",
-            GameStillInProgress => "Game is still in progress",
-            SessionDoesNotExist => "Player does not exist",
-        }
-    }
+    #[fail(display = "Error Parsing Card")]
+    CardParseError(#[cause] CardParseError),
+    #[cfg(feature = "auto_save")]
+    #[fail(display = "Database Error(ORM)")]
+    DieselResultError(#[cause] DieselResultError),
+    #[cfg(feature = "auto_save")]
+    #[fail(display = "Database Error (Connection)")]
+    R2d2Error(#[cause] R2d2Error),
 }
 
 impl From<CardParseError> for BlackJackError {
     fn from(err: CardParseError) -> Self {
-        BlackJackError::CardParse(err)
+        BlackJackError::CardParseError(err)
     }
 }
 #[cfg(feature = "auto_save")]
 impl From<DieselResultError> for BlackJackError {
     fn from(err: DieselResultError) -> Self {
-        BlackJackError::DieselResult(err)
+        BlackJackError::DieselResultError(err)
     }
 }
 #[cfg(feature = "auto_save")]
 impl From<R2d2Error> for BlackJackError {
     fn from(err: R2d2Error) -> Self {
-        BlackJackError::R2d2(err)
+        BlackJackError::R2d2Error(err)
     }
 }
 
@@ -114,7 +109,7 @@ impl BlackJackError {
     pub fn status_code(&self) -> u16 {
         use self::BlackJackError::*;
         match *self {
-            CardParse(_) => 500,
+            // CardParse(_) => 500,
             DealerAlreadyLost => 501,
             DealerAlreadyPressedStay => 500,
             DealerAlreadyWon => 501,
@@ -122,7 +117,7 @@ impl BlackJackError {
             PlayerAlreadyLost => 501,
             PlayerAlreadyPressedStay => 500,
             GameOver => 501,
-            InvalidResultCount(_) => 500,
+            InvalidResultCount { .. } => 500,
             PlayerAlreadyWon => 501,
             PlayerNotDoneYet => 501,
             SessionAlreadyExists => 501,
@@ -167,7 +162,7 @@ impl BlackJack {
         use schema::blackjack::dsl::*;
 
         // TODO: Make this safer (low)
-        let conn = db_pool.get().unwrap();
+        let conn = db_pool.get()?;
         let num: i64 = blackjack
             .filter(id.eq(player_id as i64))
             .count()
@@ -232,10 +227,10 @@ impl BlackJack {
         let mut deck = Deck::new();
         let mut player = Hand::new();
         let mut dealer = Hand::new();
-        player.add_card(deck.draw()?);
-        player.add_card(deck.draw()?);
-        dealer.add_card(deck.draw()?);
-        dealer.add_card(deck.draw()?);
+        player.add_card(deck.draw().cause("Failed to draw card from deck"));
+        player.add_card(deck.draw().cause("Failed to draw card from deck"));
+        dealer.add_card(deck.draw().cause("Failed to draw card from deck"));
+        dealer.add_card(deck.draw().cause("Failed to draw card from deck"));
         Ok(Self {
             deck,
             player,
@@ -249,7 +244,7 @@ impl BlackJack {
     }
 
     #[cfg(feature = "auto_save")]
-    pub fn restore(db_pool: &ConnectionPool, player: u64) -> Result<Self, BlackJackError> {
+    pub fn restore(db_pool: &ConnectionPool, player: u64) -> Result<Self, Error> {
         use schema::blackjack::dsl::*;
 
         // TODO: Make this safer (low)
@@ -265,8 +260,7 @@ impl BlackJack {
 
         if len != 1 {
             // There should be one result if not, nothing is found
-
-            return Err(BlackJackError::InvalidResultCount(len));
+            return Err(BlackJackError::InvalidResultCount { ct: len, expt: 1 }.into());
         }
 
         // nb: indicing 0 is safe, length already checked
@@ -274,8 +268,7 @@ impl BlackJack {
 
         if session.bet.is_none() {
             // Game is over, Start a new one
-
-            return Err(BlackJackError::GameOver);
+            return Err(BlackJackError::GameOver.into());
         }
 
         let player_bet = session.bet.unwrap();
@@ -301,21 +294,21 @@ impl BlackJack {
         })
     }
 
-    pub fn player_hit(&mut self) -> Result<(), BlackJackError> {
+    pub fn player_hit(&mut self) -> Result<(), Error> {
         match self.status() {
             GameState::InProgress => if !self.player_stay_status {
                 self.first_turn = false;
                 self.player.add_card(self.deck.draw()?);
                 Ok(())
             } else {
-                Err(BlackJackError::PlayerAlreadyPressedStay)
+                Err(BlackJackError::PlayerAlreadyPressedStay.into())
             },
-            GameState::PlayerLost => Err(BlackJackError::DealerAlreadyLost),
-            GameState::PlayerWon => Err(BlackJackError::DealerAlreadyWon),
+            GameState::PlayerLost => Err(BlackJackError::DealerAlreadyLost.into()),
+            GameState::PlayerWon => Err(BlackJackError::DealerAlreadyWon.into()),
         }
     }
 
-    pub fn player_stay(&mut self) -> Result<(), BlackJackError> {
+    pub fn player_stay(&mut self) -> Result<(), Error> {
         if !self.player_stay_status {
             self.player_stay_status = true;
 
@@ -325,17 +318,17 @@ impl BlackJack {
         Ok(())
     }
 
-    fn dealer_hit(&mut self) -> Result<(), BlackJackError> {
+    fn dealer_hit(&mut self) -> Result<(), Error> {
         self.first_turn = false;
         match self.status() {
             GameState::InProgress => if !self.dealer_stay_status {
                 self.dealer.add_card(self.deck.draw()?);
                 Ok(())
             } else {
-                Err(BlackJackError::DealerAlreadyPressedStay)
+                Err(BlackJackError::DealerAlreadyPressedStay.into())
             },
-            GameState::PlayerWon => Err(BlackJackError::DealerAlreadyLost),
-            GameState::PlayerLost => Err(BlackJackError::DealerAlreadyWon),
+            GameState::PlayerWon => Err(BlackJackError::DealerAlreadyLost.into()),
+            GameState::PlayerLost => Err(BlackJackError::DealerAlreadyWon.into()),
         }
     }
 
@@ -391,9 +384,9 @@ impl BlackJack {
     }
 
     // Computes dealer play
-    pub fn dealer_play(&mut self) -> Result<(), BlackJackError> {
+    pub fn dealer_play(&mut self) -> Result<(), Error> {
         if !self.player_stay_status {
-            return Err(BlackJackError::PlayerNotDoneYet);
+            return Err(BlackJackError::PlayerNotDoneYet.into());
         }
 
         self.first_turn = false;
@@ -437,7 +430,7 @@ impl BlackJack {
         unimplemented!()
     }
     #[cfg(feature = "auto_save")]
-    fn db_remove(&self) -> Result<(), BlackJackError> {
+    fn db_remove(&self) -> Result<(), Error> {
         use schema::blackjack::dsl::*;
 
         let conn = self.db_pool.get()?;

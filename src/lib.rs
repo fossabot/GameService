@@ -1,7 +1,5 @@
 #![recursion_limit = "128"]
-#![feature(custom_derive, test, const_fn, custom_attribute)]
-#![cfg_attr(test, feature(plugin))]
-#![cfg_attr(test, plugin(clippy))]
+#![feature(custom_derive, test, const_fn, custom_attribute, try_trait)]
 
 #[macro_use]
 extern crate cfg_if;
@@ -15,13 +13,18 @@ extern crate diesel;
 extern crate diesel_migrations;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate fuzen_macros;
 
 #[cfg(feature = "auto_save")]
 #[macro_use]
 extern crate log;
 #[macro_use(Serialize, Deserialize)]
 extern crate serde_derive;
+extern crate failure;
 extern crate serde_json;
+#[macro_use]
+extern crate failure_derive;
 
 extern crate dotenv;
 #[cfg(feature = "auto_save")]
@@ -30,6 +33,7 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
 extern crate regex;
+extern crate ron;
 
 #[cfg(feature = "auto_save")]
 pub use diesel::pg::PgConnection;
@@ -49,6 +53,9 @@ pub mod games;
 pub mod models;
 #[cfg(feature = "auto_save")]
 pub mod schema;
+
+#[macro_use]
+pub mod utils;
 
 #[cfg(feature = "auto_save")]
 pub type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
